@@ -1,16 +1,22 @@
 package org.example.emsbackend.controllers;
 
 import jakarta.validation.Valid;
+import org.apache.coyote.Response;
 import org.example.emsbackend.models.ERole;
+import org.example.emsbackend.models.RefreshToken;
 import org.example.emsbackend.models.Role;
 import org.example.emsbackend.models.User;
 import org.example.emsbackend.payload.request.LoginRequest;
 import org.example.emsbackend.payload.request.RegistrationRequest;
+import org.example.emsbackend.payload.request.TokenRefreshRequest;
 import org.example.emsbackend.payload.response.JwtResponse;
 import org.example.emsbackend.payload.response.MessageResponse;
+import org.example.emsbackend.payload.response.TokenRefreshResponse;
 import org.example.emsbackend.repositories.RoleRepository;
 import org.example.emsbackend.repositories.UserRepository;
+import org.example.emsbackend.security.exception.TokenRefreshException;
 import org.example.emsbackend.security.jwt.JwtUtils;
+import org.example.emsbackend.security.services.RefreshTokenService;
 import org.example.emsbackend.security.services.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -42,6 +48,9 @@ public class AuthController {
     RoleRepository roleRepository;
 
     @Autowired
+    RefreshTokenService refreshTokenService;
+
+    @Autowired
     PasswordEncoder encoder;
 
     @Autowired
@@ -60,15 +69,18 @@ public class AuthController {
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtUtils.generateJwtToken(authentication);
-
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+        String jwt = jwtUtils.generateJwtToken(userDetails);
+
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(item -> item.getAuthority())//can be replaced with GrantAuthority::getAuthority
                 .collect(Collectors.toList());
 
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
+
         return ResponseEntity.ok(new JwtResponse(
                 jwt,
+                refreshToken.getToken(),
                 userDetails.getId(),
                 userDetails.getUsername(),
                 userDetails.getFirstName(),
@@ -76,6 +88,20 @@ public class AuthController {
                 userDetails.getEmail(),
                 roles
         ));
+    }
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
+        String requestRefreshToken = request.getRefreshToken();
+
+        return refreshTokenService.findByToken(requestRefreshToken)
+                .map(refreshTokenService::verifyExpiration)
+                .map(RefreshToken::getUser)
+                .map(user -> {
+                    String token = jwtUtils.generateTokenFromUsername(user.getUsername());
+                    return ResponseEntity.ok(new TokenRefreshResponse(token, requestRefreshToken));
+                })
+                .orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Refresh Token is not in the database."));
     }
 
     @PostMapping("/register")
