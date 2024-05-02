@@ -57,8 +57,8 @@ public class AuthController {
     JwtUtils jwtUtils;
 
     @GetMapping("/me")
-    public ResponseEntity<?> getLoggedInUserDetails(@AuthenticationPrincipal User user) {
-        return ResponseEntity.ok(user);
+    public ResponseEntity<?> getLoggedInUserDetails(@AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return ResponseEntity.ok(userDetails);
     }
 
     @PostMapping("/login")

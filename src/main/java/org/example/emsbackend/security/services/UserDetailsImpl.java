@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class UserDetailsImpl implements UserDetails {
+public class UserDetailsImpl extends User implements UserDetails {
 
     private static final long serialVersionUID  = 1L;
 

@@ -30,14 +30,20 @@ public class RefreshTokenService {
     }
 
     public RefreshToken createRefreshToken(Long userId) {
-        RefreshToken refreshToken = new RefreshToken();
 
-        refreshToken.setUser(userRepository.findById(userId).get());
-        refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
-        refreshToken.setToken(UUID.randomUUID().toString());
+        RefreshToken existingToken = refreshTokenRepository.findByUserId(userId).orElse(null);
 
-        refreshToken = refreshTokenRepository.save(refreshToken);
-        return refreshToken;
+        if(existingToken != null) {
+            existingToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
+            existingToken.setToken(UUID.randomUUID().toString());
+            return refreshTokenRepository.save(existingToken);
+        } else {
+            RefreshToken refreshToken = new RefreshToken();
+            refreshToken.setUser(userRepository.findById(userId).get());
+            refreshToken.setExpiryDate(Instant.now().plusMillis(refreshTokenDurationMs));
+            refreshToken.setToken(UUID.randomUUID().toString());
+            return refreshTokenRepository.save(refreshToken);
+        }
     }
 
     public RefreshToken verifyExpiration(RefreshToken token) {

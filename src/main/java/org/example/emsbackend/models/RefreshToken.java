@@ -3,6 +3,8 @@ package org.example.emsbackend.models;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Cascade;
+import org.hibernate.annotations.CascadeType;
 
 import java.time.Instant;
 
@@ -15,7 +17,7 @@ public class RefreshToken {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @OneToOne
+    @OneToOne//(cascade = jakarta.persistence.CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "user_id", referencedColumnName = "id")
     private User user;
 

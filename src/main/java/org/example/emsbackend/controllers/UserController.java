@@ -1,6 +1,7 @@
 package org.example.emsbackend.controllers;
 
 import org.example.emsbackend.models.User;
+import org.example.emsbackend.payload.request.UserUpdateRequest;
 import org.example.emsbackend.repositories.UserRepository;
 import org.example.emsbackend.services.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,17 @@ public class UserController {
     @GetMapping("/user-role")
     public ResponseEntity<?> getAllUsersByRole(@RequestParam String roleName) {
         return ResponseEntity.ok(userService.getAllUsersByRole(roleName));
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<User> updateUserProfile(@PathVariable Long id, @RequestBody UserUpdateRequest updateRequest) {
+        User user = userService.updateUserProfile(id, updateRequest);
+        return ResponseEntity.ok(user);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteUserProfile(@PathVariable("id") Long id) {
+        return ResponseEntity.ok(userService.deleteUserAccount(id));
     }
 
 }
