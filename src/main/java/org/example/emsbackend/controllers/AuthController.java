@@ -19,6 +19,8 @@ import org.example.emsbackend.security.jwt.JwtUtils;
 import org.example.emsbackend.security.services.RefreshTokenService;
 import org.example.emsbackend.security.services.UserDetailsImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.support.MessageSourceAccessor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -108,14 +110,14 @@ public class AuthController {
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegistrationRequest registrationRequest) {
         if(userRepository.existsByUsername(registrationRequest.getUsername())) {
             return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("Error: Username is already taken!"));
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse(HttpStatus.BAD_REQUEST.value(), "Error: Username is already taken!"));
         }
 
         if(userRepository.existsByEmail(registrationRequest.getEmail())) {
             return ResponseEntity
-                    .badRequest()
-                    .body(new MessageResponse("Error: Email already in use!"));
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(new MessageResponse(HttpStatus.BAD_REQUEST.value(), "Error: Email already in use!"));
         }
 
         User user = new User(
@@ -158,6 +160,11 @@ public class AuthController {
         user.setRoles(roles);
         userRepository.save(user);
 
-        return ResponseEntity.ok(new MessageResponse("User registered successfully!"));
+        MessageResponse response = new MessageResponse(
+                HttpStatus.CREATED.value(),
+                "User registered successfully!"
+        );
+
+        return ResponseEntity.ok(response);
     }
 }
