@@ -16,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -32,6 +33,14 @@ public class PostService {
 
     public List<Post> getPublishedPosts() {
         Optional<List<Post>> opPosts = postRepository.getPublishedPosts();
+        if(opPosts.isPresent()) {
+            return opPosts.get();
+        }
+        return new ArrayList<>();
+    }
+
+    public List<Post> getPostsByUserId(Long userId) {
+        Optional<List<Post>> opPosts = postRepository.getPostsByUserId(userId);
         if(opPosts.isPresent()) {
             return opPosts.get();
         }
@@ -63,6 +72,7 @@ public class PostService {
                     draftPost.publish();
                     draftPost.setTitle(post.getTitle());
                     draftPost.setContent(post.getContent());
+                    draftPost.setLastUpdated(LocalDateTime.now());
                     return postRepository.save(draftPost);
                 }
             }
@@ -85,7 +95,6 @@ public class PostService {
             throw new PostNotFoundException();
         }
     }
-
     @Transactional
     public String deletePostById(Long id) throws PostNotFoundException {
         Optional<Post> post = postRepository.findById(id);
@@ -97,6 +106,5 @@ public class PostService {
         } else {
             throw new PostNotFoundException();
         }
-//        return "Unable to delete post.";
     }
 }

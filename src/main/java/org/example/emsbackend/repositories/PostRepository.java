@@ -15,4 +15,7 @@ public interface PostRepository extends ListCrudRepository<Post, Long> {
 
     @Query(value = "SELECT * FROM blog.posts WHERE status = 'PUBLISHED';", nativeQuery = true)
     Optional<List<Post>> getPublishedPosts();
+
+    @Query(value = "SELECT * FROM blog.posts WHERE user_id = :id", nativeQuery = true)
+    Optional<List<Post>> getPostsByUserId(Long id);
 }

@@ -1,8 +1,12 @@
 package org.example.emsbackend.services;
 
 import jakarta.transaction.Transactional;
+import org.example.emsbackend.exceptions.PostNotFoundException;
+import org.example.emsbackend.exceptions.PostsNotFoundException;
+import org.example.emsbackend.models.Post;
 import org.example.emsbackend.models.User;
 import org.example.emsbackend.payload.request.UserUpdateRequest;
+import org.example.emsbackend.repositories.PostRepository;
 import org.example.emsbackend.repositories.RefreshTokenRepository;
 import org.example.emsbackend.repositories.UserRepository;
 import org.example.emsbackend.security.jwt.JwtUtils;
@@ -13,6 +17,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,11 +30,22 @@ public class UserServiceImpl implements UserService{
     UserRepository userRepository;
 
     @Autowired
+    PostRepository postRepository;
+
+    @Autowired
     RefreshTokenRepository refreshTokenRepository;
 
     @Override
     public List<User> getAllUsersByRole(String roleName) {
         return userRepository.getAllUsersByRole(roleName).orElseThrow(() -> new UsernameNotFoundException("User with role ROLE_USER not found"));
+    }
+
+    public List<Post> getPostsByUserId(Long userId) {
+        Optional<List<Post>> opPosts = postRepository.getPostsByUserId(userId);
+        if(opPosts.isPresent()) {
+            return opPosts.get();
+        }
+        return new ArrayList<>();
     }
 
     @Override

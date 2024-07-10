@@ -1,8 +1,11 @@
 package org.example.emsbackend.controllers;
 
+import org.example.emsbackend.exceptions.PostsNotFoundException;
+import org.example.emsbackend.models.Post;
 import org.example.emsbackend.models.User;
 import org.example.emsbackend.payload.request.UserUpdateRequest;
 import org.example.emsbackend.repositories.UserRepository;
+import org.example.emsbackend.services.PostService;
 import org.example.emsbackend.services.UserServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +23,9 @@ public class UserController {
     UserRepository userRepository;
 
     @Autowired
+    PostService postService;
+
+    @Autowired
     UserServiceImpl userService;
 //    UserServiceImpl userService = new UserServiceImpl();
 
@@ -32,6 +38,11 @@ public class UserController {
     @GetMapping("/user-role")
     public ResponseEntity<?> getAllUsersByRole(@RequestParam String roleName) {
         return ResponseEntity.ok(userService.getAllUsersByRole(roleName));
+    }
+
+    @GetMapping("/{id}/posts")
+    public ResponseEntity<List<Post>> getAllPostsByUser(@PathVariable Long id) throws PostsNotFoundException {
+        return ResponseEntity.ok(userService.getPostsByUserId(id));
     }
 
     @PatchMapping("/{id}")
