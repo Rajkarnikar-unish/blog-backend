@@ -1,11 +1,11 @@
 package org.example.emsbackend.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Getter
 @Setter
@@ -25,27 +25,30 @@ public class User{
     private Long id;
 
     @NotBlank
-    @Size(max=20)
+    @Size(min=3, max=20)
     @Column(name = "username", nullable = false)
     private String username;
 
     @Size(max=50)
     @NotBlank
-    @Email(message = ">>>>>>>>>>>>>>THIS IS UNISH RAJKARNIKAR EMAIL<<<<<<<<<<<<<<<<<<<")
+    @Email
     @Column(name = "email", nullable = false)
     private String email;
 
     @NotBlank
+    @Size(min=3, max=20)
     @Column(name = "first_name", nullable = false)
     private String firstName;
 
     @NotBlank
+    @Size(min=3, max=20)
     @Column(name = "last_name", nullable = false)
     private String lastName;
 
     @NotBlank
     @Size(min = 6, max=120)
     @Column(name = "password", nullable = false)
+    @JsonIgnore
     private String password;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -54,11 +57,34 @@ public class User{
             inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable(name = "user_posts",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "post_id")
+    )
+    @JsonIgnore
+    private List<Post> posts;
+
     public User(String username, String email, String firstName, String lastName, String password) {
         this.username = username;
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.password = password;
+        this.posts = new ArrayList<>();
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", password='" + password + '\'' +
+                ", roles=" + roles +
+                ", posts=" + posts +
+                '}';
     }
 }

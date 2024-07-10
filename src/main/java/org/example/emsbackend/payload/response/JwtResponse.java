@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Getter
@@ -11,6 +12,7 @@ import java.util.List;
 public class JwtResponse {
     private String token;
     private String type="Bearer";
+    private String refreshToken;
     @Getter
     private Long id;
     private String username;
@@ -19,8 +21,9 @@ public class JwtResponse {
     private String email;
     private List<String> roles;
 
-    public JwtResponse(String token, Long id, String username, String firstName, String lastName, String email, List<String> roles) {
-        this.token = token;
+    public JwtResponse(String accessToken, String refreshToken, Long id, String username, String firstName, String lastName, String email, List<String> roles) {
+        this.token = accessToken;
+        this.refreshToken = refreshToken;
         this.id = id;
         this.username = username;
         this.firstName = firstName;

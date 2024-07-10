@@ -61,10 +61,16 @@ public class WebSecurityConfig {
         http.csrf(csrf -> csrf.disable())
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth ->
-                        auth.requestMatchers("/api/auth/**").permitAll()
-                                .requestMatchers("/api/test/**").permitAll()
-                                .anyRequest().authenticated()
+//                .authorizeHttpRequests(role ->
+//                        role.requestMatchers("/api/roles/**").hasRole("ROLE_ADMIN"))
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/test/**").permitAll()
+                        .requestMatchers("/api/role/**").hasAnyRole("MODERATOR", "ADMIN")
+                        .requestMatchers("/api/users/**").permitAll()
+                        .requestMatchers("/api/users/{id}/posts").authenticated()
+                        .requestMatchers("/api/posts/**").permitAll()
+                        .anyRequest().authenticated()
                 );
 
         http.authenticationProvider(authenticationProvider());
