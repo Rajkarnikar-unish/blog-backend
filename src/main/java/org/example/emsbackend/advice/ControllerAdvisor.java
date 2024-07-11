@@ -1,6 +1,7 @@
 package org.example.emsbackend.advice;
 
 import org.example.emsbackend.exceptions.EmailAlreadyExistsException;
+import org.example.emsbackend.exceptions.FileUploadFailureException;
 import org.example.emsbackend.exceptions.PostNotFoundException;
 import org.example.emsbackend.exceptions.UsernameAlreadyExistsException;
 import org.example.emsbackend.models.Post;
@@ -44,6 +45,17 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
                 request.getDescription(false)
         );
         return new ResponseEntity<>(errorMessage, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(FileUploadFailureException.class)
+    public ResponseEntity<ErrorMessage> handleFileUploadFailureException(FileUploadFailureException ex, WebRequest request) {
+        ErrorMessage message = new ErrorMessage(
+                HttpStatus.CONFLICT.value(),
+                Instant.now().toEpochMilli(),
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(message, HttpStatus.CONFLICT);
     }
 
 }
