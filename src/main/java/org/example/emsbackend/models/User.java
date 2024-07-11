@@ -52,6 +52,7 @@ public class User{
     private String password;
 
     @ManyToMany(fetch = FetchType.EAGER)
+    @JsonIgnore
     @JoinTable(name = "user_roles",
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
@@ -65,13 +66,17 @@ public class User{
     @JsonIgnore
     private List<Post> posts;
 
-    public User(String username, String email, String firstName, String lastName, String password) {
+    @Column(name = "profile_image_url")
+    private String profileImageUrl;
+
+    public User(String username, String email, String firstName, String lastName, String password, String profileImageUrl) {
         this.username = username;
         this.email = email;
         this.firstName = firstName;
         this.lastName = lastName;
         this.password = password;
         this.posts = new ArrayList<>();
+        this.profileImageUrl = profileImageUrl;
     }
 
     @Override
@@ -85,6 +90,7 @@ public class User{
                 ", password='" + password + '\'' +
                 ", roles=" + roles +
                 ", posts=" + posts +
+                ", profileImageUrl='" + profileImageUrl + '\'' +
                 '}';
     }
 }

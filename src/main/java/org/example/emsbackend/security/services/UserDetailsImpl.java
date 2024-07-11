@@ -31,17 +31,21 @@ public class UserDetailsImpl extends User implements UserDetails {
     private String lastName;
     @JsonIgnore
     private String password;
+    @Getter
+    @Setter
+    private String profileImageUrl;
 
     private Collection<? extends GrantedAuthority> authorities;
 
     //Constructor
-    public UserDetailsImpl(Long id, String username, String firstName, String lastName, String email, String password, Collection<? extends GrantedAuthority> authorities) {
+    public UserDetailsImpl(Long id, String username, String firstName, String lastName, String email, String password, String profileImageUrl, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
+        this.profileImageUrl = profileImageUrl;
         this.authorities = authorities;
     }
 
@@ -60,6 +64,7 @@ public class UserDetailsImpl extends User implements UserDetails {
                 user.getLastName(),
                 user.getEmail(),
                 user.getPassword(),
+                user.getProfileImageUrl(),
                 authorities);
     }
 

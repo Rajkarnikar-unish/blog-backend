@@ -2,6 +2,8 @@ package org.example.emsbackend.controllers;
 
 import jakarta.validation.Valid;
 import org.apache.coyote.Response;
+import org.example.emsbackend.exceptions.EmailAlreadyExistsException;
+import org.example.emsbackend.exceptions.UsernameAlreadyExistsException;
 import org.example.emsbackend.models.ERole;
 import org.example.emsbackend.models.RefreshToken;
 import org.example.emsbackend.models.Role;
@@ -88,7 +90,8 @@ public class AuthController {
                 userDetails.getFirstName(),
                 userDetails.getLastName(),
                 userDetails.getEmail(),
-                roles
+                roles,
+                userDetails.getProfileImageUrl()
         ));
     }
 
@@ -109,15 +112,11 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@Valid @RequestBody RegistrationRequest registrationRequest) {
         if(userRepository.existsByUsername(registrationRequest.getUsername())) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new MessageResponse(HttpStatus.BAD_REQUEST.value(), "Error: Username is already taken!"));
+            throw new UsernameAlreadyExistsException("Error: Username is already taken!");
         }
 
         if(userRepository.existsByEmail(registrationRequest.getEmail())) {
-            return ResponseEntity
-                    .status(HttpStatus.BAD_REQUEST)
-                    .body(new MessageResponse(HttpStatus.BAD_REQUEST.value(), "Error: Email already in use!"));
+            throw new EmailAlreadyExistsException("Error: Email already in use!");
         }
 
         User user = new User(
@@ -125,7 +124,9 @@ public class AuthController {
                 registrationRequest.getEmail(),
                 registrationRequest.getFirstName(),
                 registrationRequest.getLastName(),
-                encoder.encode(registrationRequest.getPassword()));
+                encoder.encode(registrationRequest.getPassword()),
+                "https://d3cdw8ymz2nt7l.cloudfront.net/profileImages/default_avatar.jpg"
+        );
 
         Set<String> strRoles = registrationRequest.getRole();
         Set<Role> roles = new HashSet<>();

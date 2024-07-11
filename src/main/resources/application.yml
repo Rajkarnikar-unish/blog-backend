@@ -1,0 +1,13 @@
+cloud:
+  aws:
+    credentials:
+      access-key: AKIATPHH5M3ZDE5OAVNR
+      secret-key: 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
+    region:
+      static: us-east-1
+    stack:
+      auto: false
+
+application:
+  bucket:
+    name: thought-labs-s3
