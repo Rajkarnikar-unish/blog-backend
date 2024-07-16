@@ -64,6 +64,7 @@ public class WebSecurityConfig {
 //                .authorizeHttpRequests(role ->
 //                        role.requestMatchers("/api/roles/**").hasRole("ROLE_ADMIN"))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/context-path/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
                         .requestMatchers("/api/role/**").hasAnyRole("MODERATOR", "ADMIN")
