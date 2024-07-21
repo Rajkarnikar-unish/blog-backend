@@ -36,6 +36,13 @@ public class WebSecurityConfig {
         return new AuthTokenFilter();
     }
 
+    private static final String[] SWAGGER_WHITELIST = {
+            "/context-path/swagger-ui/**",
+            "/context-path/swagger-resources",
+            "/context-path/swagger-resources/**",
+            "/context-path/v3/api-docs/**"
+    };
+
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authenticationProvider = new DaoAuthenticationProvider();
@@ -64,7 +71,7 @@ public class WebSecurityConfig {
 //                .authorizeHttpRequests(role ->
 //                        role.requestMatchers("/api/roles/**").hasRole("ROLE_ADMIN"))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/context-path/**").permitAll()
+                        .requestMatchers(SWAGGER_WHITELIST).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
                         .requestMatchers("/api/role/**").hasAnyRole("MODERATOR", "ADMIN")
