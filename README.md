@@ -18,4 +18,4 @@ This project is the backend system for the ThoughtLabs content management system
 
 ## Contributing
 
-Contributions always help. Please check out the [CONTRIBUTING.md](https://github.com/Rajkarnikar-unish/blog-backend/blob/master/CONTRIBUTING.md) for contribution guidelines.
+Contributions always help. Please check out the [CONTRIBUTING.md](https://github.com/Rajkarnikar-unish/blog-backend/blob/master/CONTRIBUTING.md) for folder structuring, commit message formatting, coding styles guidelines, and code of conduct.
