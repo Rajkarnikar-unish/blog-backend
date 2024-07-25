@@ -18,9 +18,10 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableMethodSecurity //allows spring to find and automatically apply the class to the global web security
-//(securedEnabled=true,
-//jsr250Enabled=true
+@EnableMethodSecurity // allows spring to find and automatically apply the class to the global web
+                      // security
+// (securedEnabled=true,
+// jsr250Enabled=true
 // prePostEnabled = true) enabled by default
 public class WebSecurityConfig {
 
@@ -31,7 +32,7 @@ public class WebSecurityConfig {
     private AuthEntryPointJwt unauthorizedHandler;
 
     @Bean
-    public AuthTokenFilter authenticationJwtTokenFilter() {
+    AuthTokenFilter authenticationJwtTokenFilter() {
         return new AuthTokenFilter();
     }
 
@@ -53,22 +54,22 @@ public class WebSecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+    AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable()).cors(cors-> cors.disable())
+    SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        http.csrf(csrf -> csrf.disable()).cors(cors -> cors.disable())
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-//                .authorizeHttpRequests(role ->
-//                        role.requestMatchers("/api/roles/**").hasRole("ROLE_ADMIN"))
+                // .authorizeHttpRequests(role ->
+                // role.requestMatchers("/api/roles/**").hasRole("ROLE_ADMIN"))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
@@ -79,8 +80,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/api/users/**").permitAll()
                         .requestMatchers("/api/users/{id}/posts").authenticated()
                         .requestMatchers("/api/posts/**").permitAll()
-                        .anyRequest().authenticated()
-                );
+                        .anyRequest().authenticated());
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
