@@ -12,6 +12,7 @@ import java.util.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
+@Builder
 @Table(
         name = "users",
         uniqueConstraints = {
