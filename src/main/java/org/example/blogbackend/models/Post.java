@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 @Setter
 @With
 @AllArgsConstructor
+@Builder
 @NoArgsConstructor
 @Table(name = "posts")
 public class Post {
