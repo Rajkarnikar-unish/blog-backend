@@ -1,9 +1,11 @@
 package org.example.blogbackend.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.example.blogbackend.models.EPostStatus;
 import org.example.blogbackend.models.Post;
 import org.example.blogbackend.models.User;
+import org.example.blogbackend.payload.request.UserUpdateRequest;
 import org.example.blogbackend.repositories.UserRepository;
 import org.example.blogbackend.services.PostService;
 import org.example.blogbackend.services.StorageService;
@@ -91,6 +93,31 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user", roles = {"USER"})
+    void shouldUpdateUserProfileSuccessfullyWithGivenId() throws Exception {
+        UserUpdateRequest request = UserUpdateRequest
+                .builder()
+                .email("updatedEmail@junit.com")
+                .username("TestUpdatedUserA")
+                .firstName("UpdatedFirstName")
+                .lastName("UpdatedLastName")
+                .build();
+        given(userServiceImpl.updateUserProfile(user.getId(), request)).willReturn(user);
+
+        ResultActions response = mockMvc.perform(put("/api/users/{id}", user.getId())
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(request))
+                        .with(SecurityMockMvcRequestPostProcessors.csrf()));
+
+        response.andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$.firstName", is(user.getFirstName())))
+                .andExpect(jsonPath("$.username", is(user.getUsername())))
+                .andExpect(jsonPath("$.email", is(user.getEmail())));
+
+    }
+
+    @Test
+    @WithMockUser(username = "user", roles = {"USER"})
     void shouldReturnEmptyListOfPostsCreatedByUserWithUserId() throws Exception{
 
         given(userServiceImpl.getPostsByUserId(user.getId())).willReturn(new ArrayList<Post>());
@@ -158,5 +185,4 @@ public class UserControllerTest {
         response.andExpect(status().isOk())
                 .andDo(print());
     }
-
 }

@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
@@ -81,9 +82,15 @@ public class UserController {
         }
     }
 
-    @PatchMapping("/{id}")
+    @PutMapping("/{id}")
     public ResponseEntity<User> updateUserProfile(@PathVariable Long id, @RequestBody UserUpdateRequest updateRequest) {
         User user = userService.updateUserProfile(id, updateRequest);
+        return ResponseEntity.ok(user);
+    }
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<User> patchUserProfile(@PathVariable Long id, @RequestBody Map<String, Object> updates) {
+        User user = userService.patchUserProfile(id, updates);
         return ResponseEntity.ok(user);
     }
 

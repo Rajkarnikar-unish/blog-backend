@@ -13,9 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ReflectionUtils;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -64,6 +67,22 @@ public class UserServiceImpl implements UserService{
 
         }
         throw new UsernameNotFoundException("User with username: " + userUpdateRequest.getUsername() + " not found!");
+    }
+
+    @Override
+    public User patchUserProfile(Long id, Map<String, Object> updates) {
+        Optional<User> opUser = userRepository.findById(id);
+
+        if(opUser.isPresent()){
+            User user = opUser.get();
+            updates.forEach((k, v) ->{
+                Field field = ReflectionUtils.findField(User.class, k);
+                field.setAccessible(true);
+                ReflectionUtils.setField(field, user, v);
+            });
+            return userRepository.save(user);
+        }
+        throw new UsernameNotFoundException("Username not found");
     }
 
     public User getLoggedInUser() {
