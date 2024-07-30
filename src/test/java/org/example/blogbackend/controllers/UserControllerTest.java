@@ -21,7 +21,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -93,7 +95,7 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user", roles = {"USER"})
-    void shouldUpdateUserProfileSuccessfullyWithGivenId() throws Exception {
+    void shouldUpdatUserProfileSuccessfullyWithGivenId() throws Exception {
         UserUpdateRequest request = UserUpdateRequest
                 .builder()
                 .email("updatedEmail@junit.com")
@@ -112,6 +114,23 @@ public class UserControllerTest {
                 .andDo(print())
                 .andExpect(jsonPath("$.firstName", is(user.getFirstName())))
                 .andExpect(jsonPath("$.username", is(user.getUsername())))
+                .andExpect(jsonPath("$.email", is(user.getEmail())));
+    }
+
+    @Test
+    @WithMockUser(username = "user", roles = {"USER"})
+    void shouldPatchUserProfileSuccessfullyWithGivenId() throws Exception {
+        Map<String, Object> object = new HashMap<>();
+        object.put("email", "patchEmail@junit.com");
+        given(userServiceImpl.patchUserProfile(user.getId(), object)).willReturn(user);
+
+        ResultActions response = mockMvc.perform(patch("/api/users/{id}", user.getId())
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(object))
+                .with(SecurityMockMvcRequestPostProcessors.csrf()));
+
+        response.andExpect(status().isOk())
+                .andDo(print())
                 .andExpect(jsonPath("$.email", is(user.getEmail())));
 
     }
