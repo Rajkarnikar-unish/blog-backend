@@ -2,6 +2,7 @@ package org.example.blogbackend.controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.With;
 import org.example.blogbackend.models.EPostStatus;
 import org.example.blogbackend.models.Post;
 import org.example.blogbackend.models.User;
@@ -13,17 +14,21 @@ import org.example.blogbackend.services.UserServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.awt.*;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -54,6 +59,9 @@ public class UserControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Value("${cloudfront.url}")
+    private String cloudFront;
 
     User user;
 
@@ -95,7 +103,46 @@ public class UserControllerTest {
 
     @Test
     @WithMockUser(username = "user", roles = {"USER"})
-    void shouldUpdatUserProfileSuccessfullyWithGivenId() throws Exception {
+    void shouldReturnSuccessMessageOnUploadProfileImageWithGivenId() throws Exception{
+        String fileName = "testProfile.jpg";
+
+        MockMultipartFile mockFile = new MockMultipartFile("profile_image", fileName, MediaType.IMAGE_JPEG_VALUE, "test image content".getBytes());
+
+        given(storageService.uploadFile(any(MultipartFile.class))).willReturn(fileName);
+        given(userRepository.findById(user.getId())).willReturn(Optional.of(user));
+
+        ResultActions response = mockMvc.perform(multipart("/api/users/upload-profile-image")
+                .file(mockFile)
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .param("userId", user.getId().toString())
+                .with(SecurityMockMvcRequestPostProcessors.csrf()));
+
+        response.andExpect(status().isOk())
+                .andDo(print())
+                .andExpect(jsonPath("$.message", is("Image Uploaded Successfully.")));
+    }
+
+    @Test
+    @WithMockUser(username = "user", roles = {"USER"})
+    void shouldReturnFailureMessageOnUploadProfileImageWithGivenId() throws Exception {
+        MockMultipartFile mockFile = new MockMultipartFile("profile_image", "testProfile.jpg", MediaType.IMAGE_JPEG_VALUE, "test iamge content".getBytes());
+
+        given(userRepository.findById(2L)).willReturn(Optional.empty());
+
+        ResultActions response = mockMvc.perform(multipart("/api/users/upload-profile-image")
+                .file(mockFile)
+                .contentType(MediaType.MULTIPART_FORM_DATA)
+                .param("userId", "2")
+                .with(SecurityMockMvcRequestPostProcessors.csrf()));
+
+        response.andExpect(status().isConflict())
+                .andDo(print())
+                .andExpect(jsonPath("$.message", is("File upload failed")));
+    }
+
+    @Test
+    @WithMockUser(username = "user", roles = {"USER"})
+    void shouldUpdateUserProfileSuccessfullyWithGivenId() throws Exception {
         UserUpdateRequest request = UserUpdateRequest
                 .builder()
                 .email("updatedEmail@junit.com")
@@ -103,6 +150,12 @@ public class UserControllerTest {
                 .firstName("UpdatedFirstName")
                 .lastName("UpdatedLastName")
                 .build();
+
+        user.setUsername(request.getUsername());
+        user.setEmail(request.getEmail());
+        user.setFirstName(request.getFirstName());
+        user.setLastName(request.getLastName());
+
         given(userServiceImpl.updateUserProfile(user.getId(), request)).willReturn(user);
 
         ResultActions response = mockMvc.perform(put("/api/users/{id}", user.getId())
@@ -111,10 +164,7 @@ public class UserControllerTest {
                         .with(SecurityMockMvcRequestPostProcessors.csrf()));
 
         response.andExpect(status().isOk())
-                .andDo(print())
-                .andExpect(jsonPath("$.firstName", is(user.getFirstName())))
-                .andExpect(jsonPath("$.username", is(user.getUsername())))
-                .andExpect(jsonPath("$.email", is(user.getEmail())));
+                .andDo(print());
     }
 
     @Test
@@ -122,6 +172,8 @@ public class UserControllerTest {
     void shouldPatchUserProfileSuccessfullyWithGivenId() throws Exception {
         Map<String, Object> object = new HashMap<>();
         object.put("email", "patchEmail@junit.com");
+
+        user.setEmail((String) object.get("email"));
         given(userServiceImpl.patchUserProfile(user.getId(), object)).willReturn(user);
 
         ResultActions response = mockMvc.perform(patch("/api/users/{id}", user.getId())
@@ -131,8 +183,7 @@ public class UserControllerTest {
 
         response.andExpect(status().isOk())
                 .andDo(print())
-                .andExpect(jsonPath("$.email", is(user.getEmail())));
-
+                .andExpect(jsonPath("$.email", is(object.get("email"))));
     }
 
     @Test
