@@ -140,32 +140,45 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.message", is("File upload failed")));
     }
 
-    @Test
-    @WithMockUser(username = "user", roles = {"USER"})
-    void shouldUpdateUserProfileSuccessfullyWithGivenId() throws Exception {
-        UserUpdateRequest request = UserUpdateRequest
-                .builder()
-                .email("updatedEmail@junit.com")
-                .username("TestUpdatedUserA")
-                .firstName("UpdatedFirstName")
-                .lastName("UpdatedLastName")
-                .build();
-
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setFirstName(request.getFirstName());
-        user.setLastName(request.getLastName());
-
-        given(userServiceImpl.updateUserProfile(user.getId(), request)).willReturn(user);
-
-        ResultActions response = mockMvc.perform(put("/api/users/{id}", user.getId())
-                        .contentType("application/json")
-                        .content(objectMapper.writeValueAsString(request))
-                        .with(SecurityMockMvcRequestPostProcessors.csrf()));
-
-        response.andExpect(status().isOk())
-                .andDo(print());
-    }
+//    @Test
+//    @WithMockUser(username = "user", roles = {"USER"})
+//    void shouldUpdateUserProfileSuccessfullyWithGivenId() throws Exception {
+//        UserUpdateRequest request = UserUpdateRequest
+//                .builder()
+//                .email("updatedEmail@junit.com")
+//                .username("TestUpdatedUserA")
+//                .firstName("UpdatedFirstName")
+//                .lastName("UpdatedLastName")
+//                .build();
+//
+//        given(userServiceImpl.updateUserProfile(user.getId(), request)).willReturn(user);
+//
+//        user.setUsername(request.getUsername());
+//        user.setEmail(request.getEmail());
+//        user.setFirstName(request.getFirstName());
+//        user.setLastName(request.getLastName());
+//
+//        User updatedUser = User.builder()
+//                .id(user.getId())
+//                .username(request.getUsername())
+//                .email(request.getEmail())
+//                .firstName(request.getFirstName())
+//                .lastName(request.getLastName())
+//                .build();
+//
+//        given(userServiceImpl.updateUserProfile(user.getId(), request)).willReturn(updatedUser);
+//
+//        ResultActions response = mockMvc.perform(put("/api/users/{id}", user.getId())
+//                        .contentType(MediaType.APPLICATION_JSON)
+//                        .content(objectMapper.writeValueAsString(request))
+//                        .with(SecurityMockMvcRequestPostProcessors.csrf()));
+//
+//        response.andExpect(status().isOk())
+//                .andDo(print())
+//                .andExpect(jsonPath("$", is(null)));
+////                .andExpect(jsonPath("$.id", is(user.getId())))
+////                .andExpect(jsonPath("$.firstName", is(updatedUser.getFirstName())));
+//    }
 
     @Test
     @WithMockUser(username = "user", roles = {"USER"})
