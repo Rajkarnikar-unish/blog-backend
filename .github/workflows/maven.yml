@@ -40,14 +40,14 @@ jobs:
         FACEBOOK_CLIENT_SECRET: ${{secrets.FACEBOOK_CLIENT_SECRET}}
 
       run: |
-        sed -i "s/{s3AccessKey}/${S3_ACCESS_KEY}/g" src/main/resources/application.yml
-        sed -i "s/{s3SecretKey}/${S3_SECRET_KEY}/g" src/main/resources/application.yml
+        sed -i "s#{s3AccessKey}#${S3_ACCESS_KEY}#g" src/main/resources/application.yml
+        sed -i "s#{s3SecretKey}#${S3_SECRET_KEY}#g" src/main/resources/application.yml
         
-        sed -i "s/{googleClientId}/${GOOGLE_CLIENT_ID}/g" src/main/resources/application.yml
-        sed -i "s/{googleClientSecret}/${GOOGLE_CLIENT_SECRET}/g" src/main/resources/application.yml
+        sed -i "s#{googleClientId}#${GOOGLE_CLIENT_ID}#g" src/main/resources/application.yml
+        sed -i "s#{googleClientSecret}#${GOOGLE_CLIENT_SECRET}#g" src/main/resources/application.yml
         
-        sed -i "s/{facebookClientId}/${FACEBOOK_CLIENT_ID}/g" src/main/resources/application.yml
-        sed -i "s/{facebookClientSecret}/${FACEBOOK_CLIENT_SECRET}/g" src/main/resources/application.yml
+        sed -i "s#{facebookClientId}#${FACEBOOK_CLIENT_ID}#g" src/main/resources/application.yml
+        sed -i "s#{facebookClientSecret}#${FACEBOOK_CLIENT_SECRET}#g" src/main/resources/application.yml
 
     - name: Build with Maven
       run: mvn clean install
