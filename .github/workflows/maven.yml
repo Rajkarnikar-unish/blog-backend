@@ -27,5 +27,27 @@ jobs:
         java-version: '17'
         distribution: 'liberica'
         cache: maven
+
+    - name: Update application.yml with secrets
+      env:
+        S3_ACCESS_KEY: ${{AWS_S3_ACCESS}}
+        S3_SECRET_KEY: ${{secrets.AWS_S3_SECRET}}
+
+        GOOGLE_CLIENT_ID: ${{GOOGLE_CLIENT_ID}}
+        GOOGLE_CLIENT_SECRET: ${{secrets.GOOGLE_CLIENT_SECRET}}
+
+        FACEBOOK_CLIENT_ID: ${{FACEBOOK_CLIENT_ID}}
+        FACEBOOK_CLIENT_SECRET: ${{secrets.FACEBOOK_CLIENT_SECRET}}
+
+      run: |
+        sed -i "s/{s3AccessKey}/${S3_ACCESS_KEY}/g" src/main/resources/application.yml
+        sed -i "s/{s3SecretKey}/${S3_SECRET_KEY}/g" src/main/resources/application.yml
+        
+        sed -i "s/{googleClientId}/${GOOGLE_CLIENT_ID}/g" src/main/resources/application.yml
+        sed -i "s/{googleClientSecret}/${GOOGLE_CLIENT_SECRET}/g" src/main/resources/application.yml
+        
+        sed -i "s/{facebookClientId}/${FACEBOOK_CLIENT_ID}/g" src/main/resources/application.yml
+        sed -i "s/{facebookClientSecret}/${FACEBOOK_CLIENT_SECRET}/g" src/main/resources/application.yml
+
     - name: Build with Maven
       run: mvn clean install

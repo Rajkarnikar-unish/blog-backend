@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: blog-backend
+  profiles:
+    active: dev
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${googleClientId}
+            client-secret: ${googleClientSecret}
+
+          facebook:
+            client-id: ${facebookClientId}
+            client-secret: ${facebookClientSecret}
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${s3AccessKey}
+      secret-key: ${s3SecretKey}
+    region:
+      static: us-east-1
+    stack:
+      auto: false
+
+application:
+  bucket:
+    name: thought-labs-s3
+
+springdoc:
+  api-docs:
+    path: /context-path/v3/api-docs
+  swagger-ui:
+    path: /context-path/swagger-ui.html
