@@ -1,0 +1,45 @@
+environment:
+  name: PROD
+
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:mysql://165.23.23.230/thoughtlabs_db
+    username: root
+    password: Windows11
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${googleClientId}
+            client-secret: ${googleClientSecret}
+
+          facebook:
+            client-id: ${facebookClientId}
+            client-secret: ${facebookClientSecret}
+
+cloud:
+  aws:
+    credentials:
+      access-key: ${s3AccessKey}
+      secret-key: ${s3SecretKey}
+    region:
+      static: us-east-1
+    stack:
+      auto:false
+
+application:
+  bucket:
+    name: thought-labs-s3
+
+cloudfront:
+  url: https://d3cdw8ymz2nt7l.cloudfront.net
+
+unish:
+  app:
+    secret: ${appSecret}
+    jwtExpirationMs: 604_800_000
+    jwtRefreshExpirationMs: 1_209_600_000

@@ -28,6 +28,15 @@ jobs:
         distribution: 'liberica'
         cache: maven
 
+    - name: Update active profile in application.yml
+      env:
+        ACTIVE_PROFILE: prod
+      run: |
+        if [ "${GITHUB_EVENT_NAME}" == "pull_request ]; then
+          ACTIVE_PROFILE=dev
+        
+        sed -i "s#{activeProfile}#${ACTIVE_PROFILE}#g" src/main/resource/application.yml
+
     - name: Update application.yml with secrets
       env:
         S3_ACCESS_KEY: ${{secrets.AWS_S3_ACCESS}}
@@ -40,14 +49,16 @@ jobs:
         FACEBOOK_CLIENT_SECRET: ${{secrets.FACEBOOK_CLIENT_SECRET}}
 
       run: |
-        sed -i "s#{s3AccessKey}#${S3_ACCESS_KEY}#g" src/main/resources/application.yml
-        sed -i "s#{s3SecretKey}#${S3_SECRET_KEY}#g" src/main/resources/application.yml
+        sed -i "s#{appSecret}#${APP_SECRET}#g" src/main/resources/application-prod.yml
+
+        sed -i "s#{s3AccessKey}#${S3_ACCESS_KEY}#g" src/main/resources/application-prod.yml
+        sed -i "s#{s3SecretKey}#${S3_SECRET_KEY}#g" src/main/resources/application-prod.yml
         
-        sed -i "s#{googleClientId}#${GOOGLE_CLIENT_ID}#g" src/main/resources/application.yml
-        sed -i "s#{googleClientSecret}#${GOOGLE_CLIENT_SECRET}#g" src/main/resources/application.yml
+        sed -i "s#{googleClientId}#${GOOGLE_CLIENT_ID}#g" src/main/resources/application-prod.yml
+        sed -i "s#{googleClientSecret}#${GOOGLE_CLIENT_SECRET}#g" src/main/resources/application-prod.yml
         
-        sed -i "s#{facebookClientId}#${FACEBOOK_CLIENT_ID}#g" src/main/resources/application.yml
-        sed -i "s#{facebookClientSecret}#${FACEBOOK_CLIENT_SECRET}#g" src/main/resources/application.yml
+        sed -i "s#{facebookClientId}#${FACEBOOK_CLIENT_ID}#g" src/main/resources/application-prod.yml
+        sed -i "s#{facebookClientSecret}#${FACEBOOK_CLIENT_SECRET}#g" src/main/resources/application-prod.yml
 
     - name: Build with Maven
       run: mvn clean install
