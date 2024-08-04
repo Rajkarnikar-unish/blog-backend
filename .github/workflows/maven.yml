@@ -32,9 +32,7 @@ jobs:
       env:
         ACTIVE_PROFILE: prod
       run: |
-#        if [ "${GITHUB_EVENT_NAME}" == "pull_request" ]; then
-#          ACTIVE_PROFILE=dev
-#        fi
+        ACTIVE_PROFILE=dev
         
         sed -i "s#{activeProfile}#${ACTIVE_PROFILE}#g" src/main/resource/application.yml
 
