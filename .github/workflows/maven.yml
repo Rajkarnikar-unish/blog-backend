@@ -48,6 +48,9 @@ jobs:
       run: |
         sed -i "s#{appSecret}#${APP_SECRET}#g" src/main/resources/application-prod.yml
 
+        echo "app secret ----> ${APP_SECRET}"
+        echo "accessKey -----> ${S3_ACCESS_KEY}"
+
         sed -i "s#{s3AccessKey}#${S3_ACCESS_KEY}#g" src/main/resources/application-prod.yml
         sed -i "s#{s3SecretKey}#${S3_SECRET_KEY}#g" src/main/resources/application-prod.yml
         
