@@ -31,10 +31,8 @@ jobs:
     - name: Update active profile in application.yml
       env:
         ACTIVE_PROFILE: prod
-      run: |
-        ACTIVE_PROFILE=dev
-        
-        sed -i "s#{activeProfile}#${ACTIVE_PROFILE}#g" src/main/resource/application.yml
+      run: |        
+        sed -i "s#{activeProfile}#${ACTIVE_PROFILE}#g" src/main/resources/application.yml
 
     - name: Update application.yml with secrets
       env:
