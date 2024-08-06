@@ -34,6 +34,11 @@ jobs:
       run: |        
         sed -i "s#spring.profiles.active: .*#spring.profiles.active: ${ACTIVE_PROFILE}#g" src/main/resources/application.yml
 
+    - name: Print application.yml
+      run: |
+        echo "CONTENT FOR application.yml"
+        cat src/main/resources/application.yml
+
     - name: Update application.yml with secrets
       env:
         S3_ACCESS_KEY: ${{secrets.AWS_S3_ACCESS}}
