@@ -61,4 +61,4 @@ jobs:
         sed -i "s#{facebookClientSecret}#${FACEBOOK_CLIENT_SECRET}#g" src/main/resources/application-prod.yml
 
     - name: Build with Maven
-      run: mvn clean install
+      run: mvn -B package --file pom.xml
