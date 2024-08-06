@@ -2,7 +2,7 @@ spring:
   application:
     name: blog-backend
   profiles:
-    active: ${activeProfile:dev}
+    active: dev
 
 springdoc:
   api-docs:
