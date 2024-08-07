@@ -32,7 +32,7 @@ jobs:
       env:
         ACTIVE_PROFILE: prod
       run: |
-        sed -i "s#${activeProfile}#${ACTIVE_PROFILE}#g" src/main/resources/application.yml
+        sed -i "s/${activeProfile}/${ACTIVE_PROFILE}/g" src/main/resources/application.yml
 
     - name: Print application.yml
       run: |
