@@ -28,9 +28,10 @@ jobs:
         distribution: 'liberica'
         cache: maven
 
-    - name: Update active profile in application.yml
+    - name: Replaced application.yml with application-prod.yml
       run: |
-        sed -i "s/spring.profiles.active:.*/spring.profiles.active: prod/g" src/main/resources/application.yml
+        mv src/main/resources/application-prod.yml src/main/resources/application.yml
+#        sed -i "s/spring.profiles.active:.*/spring.profiles.active: prod/g" src/main/resources/application.yml
 
     - name: Print application.yml
       run: |

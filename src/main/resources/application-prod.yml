@@ -1,7 +1,15 @@
 environment:
   name: PROD
 
+springdoc:
+  api-docs:
+    path: /context-path/v3/api-docs
+  swagger-ui:
+    path: /context-path/swagger-ui.html
+
 spring:
+  application:
+    name: blog-backend
   jpa:
     hibernate:
       ddl-auto: update
