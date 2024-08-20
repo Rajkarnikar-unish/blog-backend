@@ -2,6 +2,7 @@ package org.thoughtlabs.blogbackend.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import jakarta.validation.ValidationException;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -72,6 +73,14 @@ public class User{
 
     @Column(name = "provider")
     private String providerName;
+
+//    @PrePersist
+//    @PreUpdate
+//    private void validatePassword() {
+//        if (this.providerName== null && (this.password == null || this.password.isBlank())) {
+//            throw new ValidationException("Password is required for Non-OAuth2 users");
+//        }
+//    }
 
     public User(String username, String email, String firstName, String lastName, String password, String profileImageUrl) {
         this.username = username;

@@ -24,6 +24,7 @@ spring:
           google:
             client-id: ${googleClientId}
             client-secret: ${googleClientSecret}
+            redirectUri: "{baseUrl}/"
 
           facebook:
             client-id: ${facebookClientId}

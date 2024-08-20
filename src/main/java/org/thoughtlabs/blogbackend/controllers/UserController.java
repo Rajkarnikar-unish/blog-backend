@@ -1,6 +1,8 @@
 package org.thoughtlabs.blogbackend.controllers;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.thoughtlabs.blogbackend.exceptions.FileUploadFailureException;
 import org.thoughtlabs.blogbackend.exceptions.PostsNotFoundException;
 import org.thoughtlabs.blogbackend.models.Post;
@@ -58,6 +60,11 @@ public class UserController {
     @GetMapping("/{id}/posts")
     public ResponseEntity<List<Post>> getAllPostsByUser(@PathVariable Long id) throws PostsNotFoundException {
         return ResponseEntity.ok(userService.getPostsByUserId(id));
+    }
+
+    @GetMapping("/oauth2/user-info-w-provider")
+    public ResponseEntity<Map<String, Object>> getUserInfoWithProvider(@AuthenticationPrincipal OAuth2User principal) {
+        return ResponseEntity.ok(principal.getAttributes());
     }
 
     @PostMapping("/upload-profile-image")
