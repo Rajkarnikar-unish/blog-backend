@@ -62,11 +62,6 @@ public class UserController {
         return ResponseEntity.ok(userService.getPostsByUserId(id));
     }
 
-    @GetMapping("/oauth2/user-info-w-provider")
-    public ResponseEntity<Map<String, Object>> getUserInfoWithProvider(@AuthenticationPrincipal OAuth2User principal) {
-        return ResponseEntity.ok(principal.getAttributes());
-    }
-
     @PostMapping("/upload-profile-image")
     public ResponseEntity<MessageResponse> uploadProfileImage(@RequestParam(value = "profile_image") MultipartFile file,
             @RequestParam("userId") Long userId) {

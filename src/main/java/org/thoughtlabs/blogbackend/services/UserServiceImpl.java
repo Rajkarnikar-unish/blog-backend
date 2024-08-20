@@ -107,45 +107,83 @@ public class UserServiceImpl implements UserService {
     @Override
     public void processOAuthPostLogin(OAuth2User oAuth2User, String provider) {
         logger.info("PROVIDER ----> {}", provider);
+        String email = oAuth2User.getAttribute("email");
+        Optional<User> existingUser = userRepository.findByEmail(email);
+        //TODO: SAVE USER ACCORDING TO PROVIDER
         switch (provider) {
-            //TODO: SAVE USER ACCORDING TO PROVIDER
             case "google":
                 Map<String, Object> attributes = oAuth2User.getAttributes();
                 logger.info("ATTRIBUTES------> {}", attributes);
                 break;
             case "github":
-                String email = oAuth2User.getAttribute("email");
-                String username = oAuth2User.getAttribute("login");
-                String profileImageUrl = oAuth2User.getAttribute("avatar_url");
-                String fullName = oAuth2User.getAttribute("name");
-                String[] name = fullName != null ? fullName.split(" ") : new String[0];
-                String firstName = name[0];
-                String lastName = name[1];
+                String githubUsername = oAuth2User.getAttribute("login");
+                String githubProfileImageUrl = oAuth2User.getAttribute("avatar_url");
+                String githubFullName = oAuth2User.getAttribute("name");
+                String[] name = githubFullName != null ? githubFullName.split(" ") : new String[0];
+                String githubFirstName = name[0];
+                String githubLastName = name[1];
 
-                Optional<User> existingUser = userRepository.findByEmail(email);
                 if (existingUser.isEmpty()) {
                     User providerUser = User.builder()
-                            .username(username)
+                            .username(githubUsername)
                             .email(email)
-                            .firstName(firstName)
-                            .lastName(lastName)
-                            .profileImageUrl(profileImageUrl)
+                            .firstName(githubFirstName)
+                            .lastName(githubLastName)
+                            .profileImageUrl(githubProfileImageUrl)
                             .password("OAUTH_DEFAULT_PASSWORD")
                             .providerName(provider)
                             .build();
 
                     userRepository.save(providerUser);
+                } else {
+                    //TODO: CASE FOR IF USER ALREADY EXISTS
                 }
                 break;
-//            case "facebook":
-//                break;
+            case "facebook":
+                String facebookUsername = oAuth2User.getAttribute("name");
+                String[] facebookFullName = facebookUsername != null ? facebookUsername.split(" ") : new String[0];
+                String facebookFirstName = facebookFullName[0];
+                String facebookLastName = facebookFullName[1];
+
+                existingUser = userRepository.findByEmail(email);
+                if (existingUser.isEmpty()) {
+                    User providerUser = User.builder()
+                            .username(facebookUsername)
+                            .firstName(facebookFirstName)
+                            .lastName(facebookLastName)
+                            .email(email)
+                            .password("OAUTH_DEFAULT_PASSWORD")
+                            .providerName(provider)
+                            .build();
+
+                    userRepository.save(providerUser);
+                } else {
+                    User userToUpdate = existingUser.get();
+                    boolean isUpdated = false;
+
+                    if(!facebookUsername.equals(userToUpdate.getUsername())) {
+                        userToUpdate.setUsername(facebookUsername);
+                        isUpdated = true;
+                    }
+                    if(!facebookFirstName.equals(userToUpdate.getFirstName())) {
+                        userToUpdate.setFirstName(facebookFirstName);
+                        isUpdated = true;
+                    }
+                    if(!facebookLastName.equals(userToUpdate.getLastName())) {
+                        userToUpdate.setLastName(facebookLastName);
+                        isUpdated = true;
+                    }
+                    if(userToUpdate.getProviderName() == null || !provider.equals(userToUpdate.getProviderName())) {
+                        userToUpdate.setProviderName(provider);
+                        isUpdated = true;
+                    }
+
+                    if (isUpdated) userRepository.save(userToUpdate);
+                }
+                break;
             default:
                 break;
         }
-//        User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new EmailNotFoundException("Email Address was not found!"));
-
-//        logger.info("OAUTH2 USER =======>{}", attributes);
-//        logger.info("EXISTING USER =======>{}", existingUser);
     }
 
 }

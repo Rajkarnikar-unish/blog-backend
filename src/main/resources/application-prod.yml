@@ -22,13 +22,50 @@ spring:
       client:
         registration:
           google:
+            provider: google
             client-id: ${googleClientId}
             client-secret: ${googleClientSecret}
-            redirectUri: "{baseUrl}/"
+            scope: openid, profile, email
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:8080/login/oauth2/code/google"
+            client-name: Google
+
+          github:
+            provider: github
+            client-id: Ov23liVJWXdUYQLEHb8H
+            client-secret: fd4fc40ab2fb811eec6976678d863a1f0289ccf6
+            scope: user, user:email
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:8080/login/oauth2/code/github"
+            client-name: Github
 
           facebook:
+            provider: facebook
             client-id: ${facebookClientId}
             client-secret: ${facebookClientSecret}
+            scope: public_profile, email, user_photos
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:8080/login/oauth2/code/facebook"
+            client-name: Facebook
+
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://oauth2.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: sub
+
+          github:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: id
+
+          facebook:
+            authorization-uri: https://www.facebook.com/v20.0/dialog/oauth
+            token-uri: https://graph.facebook.com/v20.0/oauth/access_token
+            user-info-uri: https://graph.facebook.com/me?fields=id,name,email
+            user-name-attribute: id
 
 cloud:
   aws:

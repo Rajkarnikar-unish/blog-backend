@@ -65,7 +65,7 @@ public class Post {
                 "id=" + id +
                 ", title='" + title + '\'' +
                 ", content='" + content + '\'' +
-                ", author=" + author +
+                ", author=" + (author != null ? author.getId() : null) +
                 ", createdAt=" + createdAt +
                 ", status=" + status +
                 ", lastUpdated=" + lastUpdated +

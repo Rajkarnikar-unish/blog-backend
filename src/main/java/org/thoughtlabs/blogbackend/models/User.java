@@ -102,7 +102,7 @@ public class User{
                 ", lastName='" + lastName + '\'' +
                 ", password='" + password + '\'' +
                 ", roles=" + roles +
-                ", posts=" + posts +
+                ", posts=" + posts.size() +
                 ", profileImageUrl='" + profileImageUrl + '\'' +
                 '}';
     }

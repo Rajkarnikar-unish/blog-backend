@@ -1,6 +1,7 @@
 package org.thoughtlabs.blogbackend.controllers;
 
 import jakarta.validation.Valid;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.thoughtlabs.blogbackend.exceptions.EmailAlreadyExistsException;
 import org.thoughtlabs.blogbackend.exceptions.UsernameAlreadyExistsException;
 import org.thoughtlabs.blogbackend.models.ERole;
@@ -32,6 +33,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -62,6 +64,12 @@ public class AuthController {
     public ResponseEntity<?> getLoggedInUserDetails(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         return ResponseEntity.ok(userDetails);
     }
+
+    @GetMapping("/oauth2-user")
+    public ResponseEntity<?> getUserInfoWithProvider(@AuthenticationPrincipal OAuth2User oAuth2User) {
+        return ResponseEntity.ok(oAuth2User.getAttributes());
+    }
+
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
