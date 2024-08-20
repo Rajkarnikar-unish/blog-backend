@@ -1,5 +1,6 @@
 package org.thoughtlabs.blogbackend.security;
 
+import org.springframework.security.config.Customizer;
 import org.thoughtlabs.blogbackend.security.jwt.AuthEntryPointJwt;
 import org.thoughtlabs.blogbackend.security.jwt.AuthTokenFilter;
 import org.thoughtlabs.blogbackend.security.services.UserDetailsServiceImpl;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.thoughtlabs.blogbackend.services.OAuth2UserService;
 
 @Configuration
 @EnableMethodSecurity // allows spring to find and automatically apply the class to the global web
@@ -64,6 +66,11 @@ public class WebSecurityConfig {
     }
 
     @Bean
+    public OAuth2UserService oAuth2UserService() {
+        return new OAuth2UserService();
+    }
+
+    @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable()).cors(cors -> cors.disable())
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
@@ -73,14 +80,20 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(SWAGGER_WHITELIST).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/login-success").permitAll()
                         .requestMatchers("/api/test/**").permitAll()
-                        .requestMatchers("/api/login/oauth2/code/**").permitAll()
+                        .requestMatchers("/login/oauth2/code/**").permitAll()
                         .requestMatchers("/api/role/**").hasAnyRole("MODERATOR", "ADMIN")
                         .requestMatchers("/api/users/**").permitAll()
+                        .requestMatchers("/login/**").permitAll()
                         .requestMatchers("/api/users/{id}/posts").authenticated()
                         .requestMatchers("/api/posts/**").permitAll()
-                        .anyRequest().authenticated());
+//                        .requestMatchers("/").authenticated()
+                        .anyRequest().authenticated())
+                .oauth2Login(oauth2 -> oauth2
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(oAuth2UserService()))
+                        .defaultSuccessUrl("http://localhost:3000", true)
+                );
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);

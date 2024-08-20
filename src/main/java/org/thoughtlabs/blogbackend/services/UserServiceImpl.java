@@ -1,6 +1,8 @@
 package org.thoughtlabs.blogbackend.services;
 
 import jakarta.transaction.Transactional;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.thoughtlabs.blogbackend.exceptions.EmailNotFoundException;
 import org.thoughtlabs.blogbackend.models.Post;
 import org.thoughtlabs.blogbackend.models.User;
 import org.thoughtlabs.blogbackend.payload.request.UserUpdateRequest;
@@ -22,7 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Service
-public class UserServiceImpl implements UserService{
+public class UserServiceImpl implements UserService {
 
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
@@ -100,6 +102,50 @@ public class UserServiceImpl implements UserService{
             return "Your account has been deleted successfully.";
         }
         return "Not authorized to delete this account!";
+    }
+
+    @Override
+    public void processOAuthPostLogin(OAuth2User oAuth2User, String provider) {
+        logger.info("PROVIDER ----> {}", provider);
+        switch (provider) {
+            //TODO: SAVE USER ACCORDING TO PROVIDER
+            case "google":
+                Map<String, Object> attributes = oAuth2User.getAttributes();
+                logger.info("ATTRIBUTES------> {}", attributes);
+                break;
+            case "github":
+                String email = oAuth2User.getAttribute("email");
+                String username = oAuth2User.getAttribute("login");
+                String profileImageUrl = oAuth2User.getAttribute("avatar_url");
+                String fullName = oAuth2User.getAttribute("name");
+                String[] name = fullName != null ? fullName.split(" ") : new String[0];
+                String firstName = name[0];
+                String lastName = name[1];
+
+                Optional<User> existingUser = userRepository.findByEmail(email);
+                if (existingUser.isEmpty()) {
+                    User providerUser = User.builder()
+                            .username(username)
+                            .email(email)
+                            .firstName(firstName)
+                            .lastName(lastName)
+                            .profileImageUrl(profileImageUrl)
+                            .password("OAUTH_DEFAULT_PASSWORD")
+                            .providerName(provider)
+                            .build();
+
+                    userRepository.save(providerUser);
+                }
+                break;
+//            case "facebook":
+//                break;
+            default:
+                break;
+        }
+//        User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new EmailNotFoundException("Email Address was not found!"));
+
+//        logger.info("OAUTH2 USER =======>{}", attributes);
+//        logger.info("EXISTING USER =======>{}", existingUser);
     }
 
 }

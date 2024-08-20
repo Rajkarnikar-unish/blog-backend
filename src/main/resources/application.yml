@@ -3,9 +3,13 @@ spring:
     active: dev
   application:
     name: blog-backend
+  security:
+    user:
+      name: user
+      password: password
 
 springdoc:
   api-docs:
     path: /context-path/v3/api-docs
   swagger-ui:
-    path: /context-path/swagger-ui.html
+    path: /context-path/swagger-ui.ht ml
