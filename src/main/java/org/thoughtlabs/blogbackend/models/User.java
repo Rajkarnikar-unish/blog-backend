@@ -69,7 +69,7 @@ public class User{
     private List<Post> posts;
 
     @Column(name = "profile_image_url")
-    private String profileImageUrl;
+    private String profileImageUrl = "https://d3cdw8ymz2nt7l.cloudfront.net/profileImages/default_avatar.jpg";
 
     @Column(name = "provider")
     private String providerName;
@@ -102,7 +102,7 @@ public class User{
                 ", lastName='" + lastName + '\'' +
                 ", password='" + password + '\'' +
                 ", roles=" + roles +
-                ", posts=" + posts.size() +
+                ", posts=" + (posts != null ? posts.size(): "null") +
                 ", profileImageUrl='" + profileImageUrl + '\'' +
                 '}';
     }

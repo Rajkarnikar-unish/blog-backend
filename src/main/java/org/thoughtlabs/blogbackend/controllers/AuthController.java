@@ -70,7 +70,6 @@ public class AuthController {
         return ResponseEntity.ok(oAuth2User.getAttributes());
     }
 
-
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
