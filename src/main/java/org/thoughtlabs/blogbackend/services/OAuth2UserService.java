@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -61,7 +62,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 String fullName = oAuth2User.getAttribute("name");
                 String[] googleName = fullName != null ? fullName.split(" ") : new String[0];
                 String googleFirstName= googleName[0];
-                String googleLastName= googleName[1];
+                String googleLastName= googleName.length == 2 ? googleName[1] : "N/A";
 
                 user = userService.createOrUpdateOAuth2User(googleUsername, googleEmail, googleFirstName, googleLastName, googleProfileImg, registrationId);
                 break;
@@ -70,10 +71,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 log.warn("Unsupported registration id {}", registrationId);
                 throw new OAuth2AuthenticationException("Unsupported Registration ID " + registrationId);
         }
-        if (user != null) {
-            String jwtToken = jwtUtils.generateTokenFromUsername(user.getUsername());
-            log.debug("JWT Token generated from user: {}", user.getUsername());
-        }
+
         return new DefaultOAuth2User(oAuth2User.getAuthorities(), oAuth2User.getAttributes(), "name");
     }
 }
