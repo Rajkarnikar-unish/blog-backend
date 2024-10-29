@@ -65,14 +65,20 @@ public class User{
             joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "post_id")
     )
+
     @JsonIgnore
     private List<Post> posts;
 
     @Column(name = "profile_image_url")
     private String profileImageUrl = "https://d3cdw8ymz2nt7l.cloudfront.net/profileImages/default_avatar.jpg";
 
-    @Column(name = "provider")
-    private String providerName;
+    @Enumerated(EnumType.STRING)
+    private AuthProvider provider = null;
+
+    private String providerId = null;
+
+    @Column(nullable = false)
+    private boolean emailVerified = false;
 
 //    @PrePersist
 //    @PreUpdate
@@ -90,6 +96,19 @@ public class User{
         this.password = password;
         this.posts = new ArrayList<>();
         this.profileImageUrl = profileImageUrl;
+    }
+
+    public User(String username, String email, String firstName, String lastName, String password, String profileImageUrl, Role role, String providerId, AuthProvider provider) {
+        this.username = username;
+        this.email = email;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.password = password;
+        this.posts = new ArrayList<>();
+        this.profileImageUrl = profileImageUrl;
+        this.providerId = providerId;
+        this.provider = provider;
+        this.roles.add(role);
     }
 
     @Override

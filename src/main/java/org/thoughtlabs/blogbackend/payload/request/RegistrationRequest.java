@@ -28,8 +28,9 @@ public class RegistrationRequest {
 
     @NotBlank
     @NotNull
-    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=])(?=\\S+$).{6,32}$")
+    @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#$%^&+=])(?=\\S+$).{6,32}$")
     private String password;
+
     private Set<String> role;
 
     public String getUsername() {

@@ -131,10 +131,10 @@ public class UserServiceImpl implements UserService {
                 existingUser.setLastName(lastName);
                 isUpdated = true;
             }
-            if(existingUser.getProviderName() == null || !provider.equals(existingUser.getProviderName())) {
-                existingUser.setProviderName(provider);
-                isUpdated = true;
-            }
+//            if(existingUser.getProviderName() == null || !provider.equals(existingUser.getProviderName())) {
+//                existingUser.setProviderName(provider);
+//                isUpdated = true;
+//            }
             if(isUpdated) userRepository.save(existingUser);
             return existingUser;
         }).orElseGet(() -> {
@@ -144,7 +144,7 @@ public class UserServiceImpl implements UserService {
                     .firstName(firstName)
                     .lastName(lastName)
                     .profileImageUrl(profileImageUrl)
-                    .providerName(provider)
+//                    .providerName(provider)
                     .password("OAUTH_DEFAULT_PASSWORD")
                     .build();
             return userRepository.save(user);

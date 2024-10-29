@@ -1,76 +1,109 @@
-package org.thoughtlabs.blogbackend.services;
+package org.thoughtlabs.blogbackend.security.services.oauth2;
 
+import io.micrometer.common.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.InternalAuthenticationServiceException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import org.thoughtlabs.blogbackend.models.AuthProvider;
+import org.thoughtlabs.blogbackend.models.ERole;
+import org.thoughtlabs.blogbackend.models.Role;
+import org.thoughtlabs.blogbackend.models.User;
+import org.thoughtlabs.blogbackend.repositories.RoleRepository;
+import org.thoughtlabs.blogbackend.repositories.UserRepository;
+import org.thoughtlabs.blogbackend.security.exception.OAuth2AuthenticationProcessingException;
 import org.thoughtlabs.blogbackend.security.jwt.JwtUtils;
+import org.thoughtlabs.blogbackend.security.services.UserDetailsImpl;
+import org.thoughtlabs.blogbackend.security.services.oauth2.user.OAuth2UserInfo;
+import org.thoughtlabs.blogbackend.security.services.oauth2.user.OAuth2UserInfoFactory;
+import org.thoughtlabs.blogbackend.services.UserServiceImpl;
+
+import javax.naming.AuthenticationException;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 @Slf4j
 @Service
 public class OAuth2UserService extends DefaultOAuth2UserService {
 
     @Autowired
-    private UserServiceImpl userService;
+    private UserRepository userRepository;
 
     @Autowired
-    private JwtUtils jwtUtils;
+    private PasswordEncoder encoder;
+    @Autowired
+    private RoleRepository roleRepository;
 
     @Override
-    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        OAuth2User oAuth2User = super.loadUser(userRequest);
-        String registrationId = userRequest.getClientRegistration().getRegistrationId();
+    public OAuth2User loadUser(OAuth2UserRequest oAuth2UserRequest) throws OAuth2AuthenticationException {
+        OAuth2User oAuth2User = super.loadUser(oAuth2UserRequest);
 
-        String accessToken = userRequest.getAccessToken().getTokenValue();
-        String scopes = userRequest.getAccessToken().getScopes().toString();
+        try {
+            return processOAuth2User(oAuth2UserRequest, oAuth2User);
+        } catch (Exception ex) {
+            throw new InternalAuthenticationServiceException(ex.getMessage(), ex.getCause());
+        }
+    }
 
-        log.info("ACCESS TOKEN ----> {}", accessToken);
-        log.info("SCOPES ----> {}", scopes);
-
-        switch (registrationId) {
-            case "github":
-                String githubUsername = oAuth2User.getAttribute("login");
-                String githubEmail = oAuth2User.getAttribute("email");
-                String githubProfileImg = oAuth2User.getAttribute("avatar_url");
-                String githubFullName = oAuth2User.getAttribute("name");
-                String[] githubName = githubFullName != null ? githubFullName.split(" ") : new String[0];
-                String githubFirstName = githubName[0];
-                String githubLastName = githubName[1];
-
-                userService.createOrUpdateOAuth2User(githubUsername, githubEmail, githubFirstName, githubLastName, githubProfileImg, registrationId );
-                break;
-
-            case "facebook":
-                String facebookUsername = oAuth2User.getAttribute("name");
-                String facebookEmail = oAuth2User.getAttribute("email");
-                String[] facebookFullname = facebookUsername != null ? facebookUsername.split(" ") : new String[0];
-                String facebookFirstName = facebookFullname[0];
-                String facebookLastName = facebookFullname[1];
-
-                userService.createOrUpdateOAuth2User(facebookUsername, facebookEmail, facebookFirstName, facebookLastName, "https://d3cdw8ymz2nt7l.cloudfront.net/profileImages/default_avatar.jpg", registrationId);
-                break;
-
-            case "google":
-                String googleEmail = oAuth2User.getAttribute("email");
-                String googleUsername = oAuth2User.getAttribute("given_name");
-                String googleProfileImg = oAuth2User.getAttribute("picture");
-                String fullName = oAuth2User.getAttribute("name");
-                String[] googleName = fullName != null ? fullName.split(" ") : new String[0];
-                String googleFirstName= googleName[0];
-                String googleLastName= googleName.length == 2 ? googleName[1] : "N/A";
-
-                userService.createOrUpdateOAuth2User(googleUsername, googleEmail, googleFirstName, googleLastName, googleProfileImg, registrationId);
-                break;
-
-            default:
-                log.warn("Unsupported registration id {}", registrationId);
-                throw new OAuth2AuthenticationException("Unsupported Registration ID " + registrationId);
+    private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) {
+        OAuth2UserInfo oAuth2UserInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(oAuth2UserRequest.getClientRegistration().getRegistrationId(), oAuth2User.getAttributes());
+        if(StringUtils.isEmpty(oAuth2UserInfo.getEmail())) {
+            throw new OAuth2AuthenticationProcessingException("Email not found from OAuth2 provider!");
         }
 
-        return new DefaultOAuth2User(oAuth2User.getAuthorities(), oAuth2User.getAttributes(), "name");
+        Optional<User> userOptional = userRepository.findByEmail(oAuth2UserInfo.getEmail());
+        User user;
+        if(userOptional.isPresent()) {
+            user = userOptional.get();
+            if(user.getProvider() == null ||
+                    !user.getProvider().equals(AuthProvider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId()))){
+                throw new OAuth2AuthenticationProcessingException("Looks like you're signed up with "
+                        + user.getProvider() + " account. Please use your "
+                        + user.getProvider() + " account to login.");
+            }
+
+            user = updateExistingUser(user, oAuth2UserInfo);
+        } else {
+            user = registerNewUser(oAuth2UserRequest, oAuth2UserInfo);
+        }
+
+        return UserDetailsImpl.build(user, oAuth2User.getAttributes());
+    }
+
+    private User registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo) {
+        String name = oAuth2UserInfo.getName();
+        String[] nameSep = name != null ? name.split(" ") : new String[0];
+
+        User user = new User(
+                name,
+                oAuth2UserInfo.getEmail(),
+                nameSep[0],
+                nameSep.length == 2 ? nameSep[1]: "N/A",
+                encoder.encode("OAuth2" + nameSep[0] + "PW"),
+                oAuth2UserInfo.getImageUrl(),
+                roleRepository.findByName(ERole.ROLE_USER).orElseThrow(() -> new RuntimeException("Error: Role not found!")),
+                oAuth2UserInfo.getId(),
+                AuthProvider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId())
+        );
+
+        return userRepository.save(user);
+    }
+
+    private User updateExistingUser(User existingUser, OAuth2UserInfo oAuth2UserInfo) {
+        log.info("Existing User -->{}", oAuth2UserInfo.getName());
+        String name = oAuth2UserInfo.getName();
+        String[] nameSep = name != null ? name.split(" ") : new String[0];
+        existingUser.setFirstName(nameSep[0]);
+        existingUser.setLastName(nameSep.length==2? nameSep[1]: "N/A");
+        existingUser.setProfileImageUrl(oAuth2UserInfo.getImageUrl());
+        return userRepository.save(existingUser);
     }
 }

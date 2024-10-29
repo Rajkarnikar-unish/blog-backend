@@ -1,6 +1,7 @@
 package org.thoughtlabs.blogbackend.security.services;
 
 import jakarta.transaction.Transactional;
+import org.thoughtlabs.blogbackend.exceptions.ResourceNotFoundException;
 import org.thoughtlabs.blogbackend.models.User;
 import org.thoughtlabs.blogbackend.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User with " + username + " username not found."));
+        return UserDetailsImpl.build(user);
+    }
+
+    @Transactional
+    public UserDetails loadUserById(Long id) {
+        User user = userRepository.findById(id).orElseThrow(
+                () -> new ResourceNotFoundException("User", "id", id)
+        );
+
         return UserDetailsImpl.build(user);
     }
 }

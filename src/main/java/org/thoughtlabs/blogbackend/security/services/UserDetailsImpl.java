@@ -3,6 +3,9 @@ package org.thoughtlabs.blogbackend.security.services;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.thoughtlabs.blogbackend.models.AuthProvider;
 import org.thoughtlabs.blogbackend.models.User;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -10,10 +13,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class UserDetailsImpl extends User implements UserDetails {
+@Slf4j
+public class UserDetailsImpl extends User implements OAuth2User, UserDetails {
 
     private static final long serialVersionUID  = 1L;
 
@@ -34,11 +39,16 @@ public class UserDetailsImpl extends User implements UserDetails {
     @Getter
     @Setter
     private String profileImageUrl;
+    @Getter
+    @Setter
+    private AuthProvider provider;
 
     private Collection<? extends GrantedAuthority> authorities;
 
+    private Map<String, Object> attributes;
+
     //Constructor
-    public UserDetailsImpl(Long id, String username, String firstName, String lastName, String email, String password, String profileImageUrl, Collection<? extends GrantedAuthority> authorities) {
+    public UserDetailsImpl(Long id, String username, String firstName, String lastName, String email, String password, String profileImageUrl, AuthProvider provider, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.firstName = firstName;
@@ -46,6 +56,7 @@ public class UserDetailsImpl extends User implements UserDetails {
         this.email = email;
         this.password = password;
         this.profileImageUrl = profileImageUrl;
+        this.provider = provider;
         this.authorities = authorities;
     }
 
@@ -65,7 +76,23 @@ public class UserDetailsImpl extends User implements UserDetails {
                 user.getEmail(),
                 user.getPassword(),
                 user.getProfileImageUrl(),
+                user.getProvider(),
                 authorities);
+    }
+
+    public static UserDetailsImpl build(User user, Map<String, Object> attributes) {
+        UserDetailsImpl userDetailsImpl = UserDetailsImpl.build(user);
+        userDetailsImpl.setAttributes(attributes);
+        return userDetailsImpl;
+    }
+
+    @Override
+    public Map<String, Object> getAttributes() {
+        return attributes;
+    }
+
+    public void setAttributes(Map<String, Object> attributes) {
+        this.attributes = attributes;
     }
 
     @Override
@@ -111,5 +138,26 @@ public class UserDetailsImpl extends User implements UserDetails {
             return false;
         UserDetailsImpl user = (UserDetailsImpl) obj;
         return Objects.equals(id, user.id);
+    }
+
+    @Override
+    public String getName() {
+        return String.valueOf(id);
+    }
+
+    @Override
+    public String toString() {
+        return "UserDetailsImpl{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                ", email='" + email + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", password='" + password + '\'' +
+                ", profileImageUrl='" + profileImageUrl + '\'' +
+                ", provider='" + provider + '\'' +
+                ", authorities=" + authorities +
+                ", attributes=" + attributes +
+                '}';
     }
 }
