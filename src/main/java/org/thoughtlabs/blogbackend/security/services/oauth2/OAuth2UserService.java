@@ -1,20 +1,14 @@
 package org.thoughtlabs.blogbackend.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-import org.thoughtlabs.blogbackend.models.User;
 import org.thoughtlabs.blogbackend.security.jwt.JwtUtils;
-
-import java.util.Map;
 
 @Slf4j
 @Service
@@ -31,7 +25,12 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         OAuth2User oAuth2User = super.loadUser(userRequest);
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
 
-        User user;
+        String accessToken = userRequest.getAccessToken().getTokenValue();
+        String scopes = userRequest.getAccessToken().getScopes().toString();
+
+        log.info("ACCESS TOKEN ----> {}", accessToken);
+        log.info("SCOPES ----> {}", scopes);
+
         switch (registrationId) {
             case "github":
                 String githubUsername = oAuth2User.getAttribute("login");
@@ -42,7 +41,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 String githubFirstName = githubName[0];
                 String githubLastName = githubName[1];
 
-                user = userService.createOrUpdateOAuth2User(githubUsername, githubEmail, githubFirstName, githubLastName, githubProfileImg, registrationId );
+                userService.createOrUpdateOAuth2User(githubUsername, githubEmail, githubFirstName, githubLastName, githubProfileImg, registrationId );
                 break;
 
             case "facebook":
@@ -52,7 +51,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 String facebookFirstName = facebookFullname[0];
                 String facebookLastName = facebookFullname[1];
 
-                user = userService.createOrUpdateOAuth2User(facebookUsername, facebookEmail, facebookFirstName, facebookLastName, "https://d3cdw8ymz2nt7l.cloudfront.net/profileImages/default_avatar.jpg", registrationId);
+                userService.createOrUpdateOAuth2User(facebookUsername, facebookEmail, facebookFirstName, facebookLastName, "https://d3cdw8ymz2nt7l.cloudfront.net/profileImages/default_avatar.jpg", registrationId);
                 break;
 
             case "google":
@@ -64,7 +63,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 String googleFirstName= googleName[0];
                 String googleLastName= googleName.length == 2 ? googleName[1] : "N/A";
 
-                user = userService.createOrUpdateOAuth2User(googleUsername, googleEmail, googleFirstName, googleLastName, googleProfileImg, registrationId);
+                userService.createOrUpdateOAuth2User(googleUsername, googleEmail, googleFirstName, googleLastName, googleProfileImg, registrationId);
                 break;
 
             default:
