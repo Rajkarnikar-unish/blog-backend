@@ -1,0 +1,6 @@
+.vscode
+.idea
+.gitignore
+README.md
+src/main/java/resources/application-dev.yml
+CONTRIBUTING.md

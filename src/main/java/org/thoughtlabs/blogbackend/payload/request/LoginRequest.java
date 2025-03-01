@@ -12,6 +12,7 @@ public class LoginRequest {
     @NotBlank
     @NotNull
     private String username;
+
     @NotBlank
     @NotNull
     private String password;

@@ -1,0 +1,27 @@
+#version: "3.8"
+#
+#services:
+#  mysqldb:
+#    image: mysql:8.0
+#    restart: unless-stopped
+#    environment:
+#      MYSQL_DATABASE: blog
+#      MYSQL_USER: root
+#      MYSQL_PASSWORD: windows
+#    ports:
+#      - "3306:3306"
+#
+#  thoughtlabs-app:
+#    depends_on:
+#      - mysqldb
+#    restart: on-failure
+#    env_file: ./.env
+#    networks:
+#      - springapimysql-net
+#    ports:
+#      - "8080"
+#    environment:
+#        SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/blog
+#        SPRING_DATASOURCE_USERNAME: "root"
+#        SPRING_DATASOURCE_PASSWORD: "windows"
+#

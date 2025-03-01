@@ -22,5 +22,7 @@ public interface UserService {
 
     public String deleteUserAccount(Long id);
 
-    public void processOAuthPostLogin(OAuth2User oAuth2User, String provider);
+//    public void processOAuthPostLogin(OAuth2User oAuth2User, String provider);
+
+    public User createOrUpdateOAuth2User(String username, String email, String firstName, String lastName, String profileImageUrl, String provider);
 }

@@ -1,6 +1,7 @@
 package org.thoughtlabs.blogbackend.controllers;
 
 import jakarta.validation.Valid;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.thoughtlabs.blogbackend.exceptions.EmailAlreadyExistsException;
 import org.thoughtlabs.blogbackend.exceptions.UsernameAlreadyExistsException;
 import org.thoughtlabs.blogbackend.models.ERole;
@@ -32,10 +33,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -63,13 +64,22 @@ public class AuthController {
         return ResponseEntity.ok(userDetails);
     }
 
+//    @PostMapping("/oauth2/login/success")
+//    public ResponseEntity<?> getUserInfoWithProvider(@AuthenticationPrincipal OAuth2User oAuth2User) {
+//        return ResponseEntity.ok(oAuth2User.getAttributes());
+//    }
+
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
 
         // Authenticating the user details from the payload LoginRequest with username
         // and password
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getUsername(),
+                        loginRequest.getPassword()
+                )
+        );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
@@ -124,7 +134,7 @@ public class AuthController {
                 registrationRequest.getFirstName(),
                 registrationRequest.getLastName(),
                 encoder.encode(registrationRequest.getPassword()),
-                "https://d3cdw8ymz2nt7l.cloudfront.net/profileImages/default_avatar.jpg");
+                "https://d3cdw8ymz2nt7l.cloudfront.net/profileImages/default_avatar.jpg"                );
 
         Set<String> strRoles = registrationRequest.getRole();
         Set<Role> roles = new HashSet<>();

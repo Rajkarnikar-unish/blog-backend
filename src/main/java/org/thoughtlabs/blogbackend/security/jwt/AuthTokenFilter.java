@@ -2,6 +2,7 @@ package org.thoughtlabs.blogbackend.security.jwt;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.thoughtlabs.blogbackend.security.services.UserDetailsServiceImpl;
@@ -15,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.thoughtlabs.blogbackend.util.CookieUtils;
 
 import java.io.IOException;
 
@@ -57,6 +59,9 @@ public class AuthTokenFilter extends OncePerRequestFilter {
         if(StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
             return headerAuth.substring(7);
         }
-        return null;
+
+        return CookieUtils.getCookie(request, "access_token")
+                .map(Cookie::getValue)
+                .orElse(null);
     }
 }

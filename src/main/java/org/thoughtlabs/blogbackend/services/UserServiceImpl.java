@@ -39,36 +39,41 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getAllUsersByRole(String roleName) {
-        return userRepository.getAllUsersByRole(roleName).orElseThrow(() -> new UsernameNotFoundException("User with role ROLE_USER not found"));
+        return userRepository.getAllUsersByRole(roleName)
+                .orElseThrow(() -> new UsernameNotFoundException("User with role " + roleName + " not found"));
     }
 
     public List<Post> getPostsByUserId(Long userId) {
-        Optional<List<Post>> opPosts = postRepository.getPostsByUserId(userId);
-        if(opPosts.isPresent()) {
-            return opPosts.get();
-        }
-        return new ArrayList<>();
+        return postRepository.getPostsByUserId(userId).orElseGet(ArrayList::new);
     }
 
     @Override
     public User findByUsername(String username) {
-        return userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("User with "+ username +" not found"));
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User with "+ username +" not found"));
     }
 
     @Override
     public User updateUserProfile(Long id, UserUpdateRequest userUpdateRequest) {
-        Optional<User> opUser = userRepository.findById(id);
-        if (opUser.isPresent()) {
-            User user = opUser.get();
-            user.setUsername(userUpdateRequest.getUsername());
-            user.setFirstName(userUpdateRequest.getFirstName());
+//        Optional<User> opUser = userRepository.findById(id);
+//        if (opUser.isPresent()) {
+//            User user = opUser.get();
+//            user.setUsername(userUpdateRequest.getUsername());
+//            user.setFirstName(userUpdateRequest.getFirstName());
+//            user.setLastName(userUpdateRequest.getLastName());
+//            user.setEmail(userUpdateRequest.getEmail());
+//
+//            return userRepository.save(user);
+//
+//        }
+//        throw new UsernameNotFoundException("User with username: " + userUpdateRequest.getUsername() + " not found!");
+        return userRepository.findById(id).map(user -> {
+            user.setUsername(userUpdateRequest.getFirstName());
+            user.setFirstName(userUpdateRequest.getLastName());
             user.setLastName(userUpdateRequest.getLastName());
             user.setEmail(userUpdateRequest.getEmail());
-
             return userRepository.save(user);
-
-        }
-        throw new UsernameNotFoundException("User with username: " + userUpdateRequest.getUsername() + " not found!");
+        }).orElseThrow(() -> new UsernameNotFoundException("User with username: " + userUpdateRequest.getUsername() + " not found!"));
     }
 
     @Override
@@ -79,8 +84,10 @@ public class UserServiceImpl implements UserService {
             User user = opUser.get();
             updates.forEach((k, v) ->{
                 Field field = ReflectionUtils.findField(User.class, k);
-                field.setAccessible(true);
-                ReflectionUtils.setField(field, user, v);
+                if(field != null){
+                    field.setAccessible(true);
+                    ReflectionUtils.setField(field, user, v);
+                }
             });
             return userRepository.save(user);
         }
@@ -96,7 +103,7 @@ public class UserServiceImpl implements UserService {
     public String deleteUserAccount(Long id) {
         Optional<User> opUser = userRepository.findById(id);
         User currentUser = getLoggedInUser();
-        if(opUser.isPresent() && currentUser.getId() == id) {
+        if(opUser.isPresent() && currentUser.getId().equals(id)) {
             refreshTokenRepository.deleteByUser(opUser.get());
             userRepository.deleteById(id);
             return "Your account has been deleted successfully.";
@@ -105,47 +112,42 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void processOAuthPostLogin(OAuth2User oAuth2User, String provider) {
-        logger.info("PROVIDER ----> {}", provider);
-        switch (provider) {
-            //TODO: SAVE USER ACCORDING TO PROVIDER
-            case "google":
-                Map<String, Object> attributes = oAuth2User.getAttributes();
-                logger.info("ATTRIBUTES------> {}", attributes);
-                break;
-            case "github":
-                String email = oAuth2User.getAttribute("email");
-                String username = oAuth2User.getAttribute("login");
-                String profileImageUrl = oAuth2User.getAttribute("avatar_url");
-                String fullName = oAuth2User.getAttribute("name");
-                String[] name = fullName != null ? fullName.split(" ") : new String[0];
-                String firstName = name[0];
-                String lastName = name[1];
-
-                Optional<User> existingUser = userRepository.findByEmail(email);
-                if (existingUser.isEmpty()) {
-                    User providerUser = User.builder()
-                            .username(username)
-                            .email(email)
-                            .firstName(firstName)
-                            .lastName(lastName)
-                            .profileImageUrl(profileImageUrl)
-                            .password("OAUTH_DEFAULT_PASSWORD")
-                            .providerName(provider)
-                            .build();
-
-                    userRepository.save(providerUser);
-                }
-                break;
-//            case "facebook":
-//                break;
-            default:
-                break;
-        }
-//        User existingUser = userRepository.findByEmail(email).orElseThrow(() -> new EmailNotFoundException("Email Address was not found!"));
-
-//        logger.info("OAUTH2 USER =======>{}", attributes);
-//        logger.info("EXISTING USER =======>{}", existingUser);
+    public User createOrUpdateOAuth2User(String username, String email, String firstName, String lastName, String profileImageUrl, String provider) {
+        return userRepository.findByEmail(email).map(existingUser -> {
+            boolean isUpdated = false;
+            if (!username.equals(existingUser.getUsername())) {
+                existingUser.setUsername(username);
+                isUpdated = true;
+            }
+            if(!email.equals(existingUser.getEmail())) {
+                existingUser.setEmail(email);
+                isUpdated = true;
+            }
+            if(!firstName.equals(existingUser.getFirstName())) {
+                existingUser.setFirstName(firstName);
+                isUpdated = true;
+            }
+            if(!lastName.equals(existingUser.getLastName())) {
+                existingUser.setLastName(lastName);
+                isUpdated = true;
+            }
+//            if(existingUser.getProviderName() == null || !provider.equals(existingUser.getProviderName())) {
+//                existingUser.setProviderName(provider);
+//                isUpdated = true;
+//            }
+            if(isUpdated) userRepository.save(existingUser);
+            return existingUser;
+        }).orElseGet(() -> {
+            User user = User.builder()
+                    .username(username)
+                    .email(email)
+                    .firstName(firstName)
+                    .lastName(lastName)
+                    .profileImageUrl(profileImageUrl)
+//                    .providerName(provider)
+                    .password("OAUTH_DEFAULT_PASSWORD")
+                    .build();
+            return userRepository.save(user);
+        });
     }
-
 }

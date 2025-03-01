@@ -24,7 +24,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 import java.util.Map;
 
-@CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @Slf4j
 @RequestMapping("/api/users")
@@ -60,11 +59,6 @@ public class UserController {
     @GetMapping("/{id}/posts")
     public ResponseEntity<List<Post>> getAllPostsByUser(@PathVariable Long id) throws PostsNotFoundException {
         return ResponseEntity.ok(userService.getPostsByUserId(id));
-    }
-
-    @GetMapping("/oauth2/user-info-w-provider")
-    public ResponseEntity<Map<String, Object>> getUserInfoWithProvider(@AuthenticationPrincipal OAuth2User principal) {
-        return ResponseEntity.ok(principal.getAttributes());
     }
 
     @PostMapping("/upload-profile-image")

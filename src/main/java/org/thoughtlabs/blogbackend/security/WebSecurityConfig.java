@@ -1,6 +1,10 @@
 package org.thoughtlabs.blogbackend.security;
 
-import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.thoughtlabs.blogbackend.security.services.oauth2.OAuth2AuthenticationFailureHandler;
+import org.thoughtlabs.blogbackend.security.services.oauth2.OAuth2AuthenticationSuccessHandler;
 import org.thoughtlabs.blogbackend.security.jwt.AuthEntryPointJwt;
 import org.thoughtlabs.blogbackend.security.jwt.AuthTokenFilter;
 import org.thoughtlabs.blogbackend.security.services.UserDetailsServiceImpl;
@@ -17,7 +21,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.thoughtlabs.blogbackend.services.OAuth2UserService;
+import org.thoughtlabs.blogbackend.security.services.oauth2.OAuth2UserService;
 
 @Configuration
 @EnableMethodSecurity // allows spring to find and automatically apply the class to the global web
@@ -25,13 +29,19 @@ import org.thoughtlabs.blogbackend.services.OAuth2UserService;
 // (securedEnabled=true,
 // jsr250Enabled=true
 // prePostEnabled = true) enabled by default
-public class WebSecurityConfig {
+public class WebSecurityConfig implements WebMvcConfigurer {
 
     @Autowired
     UserDetailsServiceImpl userDetailsService;
 
     @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
+
+    @Autowired
+    private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+
+    @Autowired
+    private OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
 
     @Bean
     AuthTokenFilter authenticationJwtTokenFilter() {
@@ -87,16 +97,28 @@ public class WebSecurityConfig {
                         .requestMatchers("/login/**").permitAll()
                         .requestMatchers("/api/users/{id}/posts").authenticated()
                         .requestMatchers("/api/posts/**").permitAll()
+
 //                        .requestMatchers("/").authenticated()
                         .anyRequest().authenticated())
                 .oauth2Login(oauth2 -> oauth2
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(oAuth2UserService()))
-                        .defaultSuccessUrl("http://localhost:3000", true)
+                        .successHandler(oAuth2AuthenticationSuccessHandler)
+                        .failureHandler(oAuth2AuthenticationFailureHandler)
                 );
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins("http://localhost:3000")
+                .allowedMethods("GET", "POST", "PUT", "DELETE")
+                .allowedHeaders("Authorization", "Content-Type")
+                .allowCredentials(true)
+                .maxAge(3600);
     }
 }
