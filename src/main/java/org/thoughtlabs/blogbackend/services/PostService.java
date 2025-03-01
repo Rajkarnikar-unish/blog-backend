@@ -29,17 +29,17 @@ public class PostService {
     UserRepository userRepository;
 
     public List<Post> getPublishedPosts() {
-        Optional<List<Post>> opPosts = postRepository.getPublishedPosts();
-        if(opPosts.isPresent()) {
-            return opPosts.get();
+        List<Post> posts = postRepository.getPublishedPosts();
+        if(!posts.isEmpty()) {
+            return posts;
         }
         return new ArrayList<>();
     }
 
     public List<Post> getPostsByUserId(Long userId) {
-        Optional<List<Post>> opPosts = postRepository.getPostsByUserId(userId);
-        if(opPosts.isPresent()) {
-            return opPosts.get();
+        List<Post> posts = postRepository.getPostsByUserId(userId);
+        if(!posts.isEmpty()) {
+            return posts;
         }
         return new ArrayList<>();
     }
@@ -57,7 +57,7 @@ public class PostService {
         return null;
     }
 
-    public Post publish(Post post, Long draftId) {
+    public Post publishPost(Post post, Long draftId) {
         User currentUser = userRepository
                 .findByUsername(SecurityContextHolder.getContext().getAuthentication().getName())
                 .orElseThrow(() -> new UsernameNotFoundException("User is not logged in!"));

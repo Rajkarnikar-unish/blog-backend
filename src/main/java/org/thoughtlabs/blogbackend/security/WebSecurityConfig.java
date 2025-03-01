@@ -1,5 +1,6 @@
 package org.thoughtlabs.blogbackend.security;
 
+import org.springframework.format.FormatterRegistry;
 import org.springframework.security.config.annotation.web.WebSecurityConfigurer;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -22,6 +23,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.thoughtlabs.blogbackend.security.services.oauth2.OAuth2UserService;
+import org.thoughtlabs.blogbackend.util.StringToEnumConverter;
 
 @Configuration
 @EnableMethodSecurity // allows spring to find and automatically apply the class to the global web
@@ -54,6 +56,11 @@ public class WebSecurityConfig implements WebMvcConfigurer {
             "/context-path/swagger-resources/**",
             "/context-path/v3/api-docs/**"
     };
+
+    @Override
+    public void addFormatters(FormatterRegistry registry) {
+        registry.addConverter(new StringToEnumConverter());
+    }
 
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {

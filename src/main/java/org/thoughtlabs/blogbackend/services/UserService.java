@@ -1,6 +1,7 @@
 package org.thoughtlabs.blogbackend.services;
 
 import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.thoughtlabs.blogbackend.models.EPostStatus;
 import org.thoughtlabs.blogbackend.models.Post;
 import org.thoughtlabs.blogbackend.models.User;
 import org.thoughtlabs.blogbackend.payload.request.UserUpdateRequest;
@@ -12,7 +13,9 @@ public interface UserService {
 
     public List<User> getAllUsersByRole(String roleName);
 
-    public List<Post> getPostsByUserId(Long id);
+    public List<Post> getUsersPostByStatus(Long id, EPostStatus status);
+
+//    public List<Post> getPostsByUserId(Long id);
 
     public User findByUsername(String username);
 

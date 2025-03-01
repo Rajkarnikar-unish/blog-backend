@@ -3,6 +3,7 @@ package org.thoughtlabs.blogbackend.services;
 import jakarta.transaction.Transactional;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.thoughtlabs.blogbackend.exceptions.EmailNotFoundException;
+import org.thoughtlabs.blogbackend.models.EPostStatus;
 import org.thoughtlabs.blogbackend.models.Post;
 import org.thoughtlabs.blogbackend.models.User;
 import org.thoughtlabs.blogbackend.payload.request.UserUpdateRequest;
@@ -43,8 +44,18 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UsernameNotFoundException("User with role " + roleName + " not found"));
     }
 
-    public List<Post> getPostsByUserId(Long userId) {
-        return postRepository.getPostsByUserId(userId).orElseGet(ArrayList::new);
+//    public List<Post> getPostsByUserId(Long userId) {
+//        return postRepository.getPostsByUserId(userId).orElseGet(ArrayList::new);
+//    }
+
+    @Override
+    public List<Post> getUsersPostByStatus(Long userId, EPostStatus status) {
+        String statusStr = status.name();
+        List<Post> posts = postRepository.getUserPostsBasedOnStatus(userId, statusStr);
+        if (!posts.isEmpty()) {
+            return posts;
+        }
+        return new ArrayList<>();
     }
 
     @Override
@@ -55,21 +66,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User updateUserProfile(Long id, UserUpdateRequest userUpdateRequest) {
-//        Optional<User> opUser = userRepository.findById(id);
-//        if (opUser.isPresent()) {
-//            User user = opUser.get();
-//            user.setUsername(userUpdateRequest.getUsername());
-//            user.setFirstName(userUpdateRequest.getFirstName());
-//            user.setLastName(userUpdateRequest.getLastName());
-//            user.setEmail(userUpdateRequest.getEmail());
-//
-//            return userRepository.save(user);
-//
-//        }
-//        throw new UsernameNotFoundException("User with username: " + userUpdateRequest.getUsername() + " not found!");
         return userRepository.findById(id).map(user -> {
-            user.setUsername(userUpdateRequest.getFirstName());
-            user.setFirstName(userUpdateRequest.getLastName());
+            user.setUsername(userUpdateRequest.getUsername());
+            user.setFirstName(userUpdateRequest.getFirstName());
             user.setLastName(userUpdateRequest.getLastName());
             user.setEmail(userUpdateRequest.getEmail());
             return userRepository.save(user);

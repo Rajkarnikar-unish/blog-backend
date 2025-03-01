@@ -194,51 +194,51 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.email", is(object.get("email"))));
     }
 
-    @Test
-    @WithMockUser(username = "user", roles = {"USER"})
-    void shouldReturnEmptyListOfPostsCreatedByUserWithUserId() throws Exception{
+//    @Test
+//    @WithMockUser(username = "user", roles = {"USER"})
+//    void shouldReturnEmptyListOfPostsCreatedByUserWithUserId() throws Exception{
+//
+//        given(userServiceImpl.getPostsByUserId(user.getId())).willReturn(new ArrayList<Post>());
+//
+//        ResultActions response = mockMvc.perform(get("/api/users/{id}/posts", user.getId()));
+//
+//        response.andExpect(status().isOk())
+//                .andDo(print())
+//                .andExpect(jsonPath("$", hasSize(0)));
+//    }
 
-        given(userServiceImpl.getPostsByUserId(user.getId())).willReturn(new ArrayList<Post>());
-
-        ResultActions response = mockMvc.perform(get("/api/users/{id}/posts", user.getId()));
-
-        response.andExpect(status().isOk())
-                .andDo(print())
-                .andExpect(jsonPath("$", hasSize(0)));
-    }
-
-    @Test
-    @WithMockUser(username = "user", roles = {"USER"})
-    void shouldReturnListOfPostsCreatedByUserWithUserId() throws Exception{
-
-        List<Post> postsList = new ArrayList<>();
-        Post post1 = Post.builder()
-                .content("TestPostContentA")
-                .title("TestPostTitleA")
-                .author(user)
-                .status(EPostStatus.PUBLISHED)
-                .build();
-
-        Post post2 = Post.builder()
-                .content("TestPostContentB")
-                .title("TestPostTitleB")
-                .author(user)
-                .status(EPostStatus.DRAFT)
-                .build();
-
-        postsList.add(post1);
-        postsList.add(post2);
-
-        user.setPosts(postsList);
-
-        given(userServiceImpl.getPostsByUserId(user.getId())).willReturn(postsList);
-
-        ResultActions response = mockMvc.perform(get("/api/users/{id}/posts", user.getId()));
-
-        response.andExpect(status().isOk())
-                .andDo(print())
-                .andExpect(jsonPath("$", hasSize(postsList.size())));
-    }
+//    @Test
+//    @WithMockUser(username = "user", roles = {"USER"})
+//    void shouldReturnListOfPostsCreatedByUserWithUserId() throws Exception{
+//
+//        List<Post> postsList = new ArrayList<>();
+//        Post post1 = Post.builder()
+//                .content("TestPostContentA")
+//                .title("TestPostTitleA")
+//                .author(user)
+//                .status(EPostStatus.PUBLISHED)
+//                .build();
+//
+//        Post post2 = Post.builder()
+//                .content("TestPostContentB")
+//                .title("TestPostTitleB")
+//                .author(user)
+//                .status(EPostStatus.DRAFT)
+//                .build();
+//
+//        postsList.add(post1);
+//        postsList.add(post2);
+//
+//        user.setPosts(postsList);
+//
+//        given(userServiceImpl.getPostsByUserId(user.getId())).willReturn(postsList);
+//
+//        ResultActions response = mockMvc.perform(get("/api/users/{id}/posts", user.getId()));
+//
+//        response.andExpect(status().isOk())
+//                .andDo(print())
+//                .andExpect(jsonPath("$", hasSize(postsList.size())));
+//    }
 
     @Test
     @WithMockUser(username = "user", roles = {"USER"})
