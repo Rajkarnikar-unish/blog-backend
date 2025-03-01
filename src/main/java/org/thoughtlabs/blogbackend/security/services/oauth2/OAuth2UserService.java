@@ -98,7 +98,6 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private User updateExistingUser(User existingUser, OAuth2UserInfo oAuth2UserInfo) {
-        log.info("Existing User -->{}", oAuth2UserInfo.getName());
         String name = oAuth2UserInfo.getName();
         String[] nameSep = name != null ? name.split(" ") : new String[0];
         existingUser.setFirstName(nameSep[0]);
