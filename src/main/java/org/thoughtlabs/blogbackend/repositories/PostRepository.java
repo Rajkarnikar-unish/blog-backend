@@ -1,5 +1,7 @@
 package org.thoughtlabs.blogbackend.repositories;
 
+import org.springframework.data.repository.query.Param;
+import org.thoughtlabs.blogbackend.models.EPostStatus;
 import org.thoughtlabs.blogbackend.models.Post;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.ListCrudRepository;
@@ -12,8 +14,11 @@ import java.util.Optional;
 public interface PostRepository extends ListCrudRepository<Post, Long> {
 
     @Query(value = "SELECT * FROM blog.posts WHERE status = 'PUBLISHED';", nativeQuery = true)
-    Optional<List<Post>> getPublishedPosts();
+    List<Post> getPublishedPosts();
 
     @Query(value = "SELECT * FROM blog.posts WHERE user_id = :id", nativeQuery = true)
-    Optional<List<Post>> getPostsByUserId(Long id);
+    List<Post> getPostsByUserId(Long id);
+
+    @Query(value = "SELECT * FROM blog.posts WHERE user_id= :id AND status = :status", nativeQuery = true)
+    List<Post> getUserPostsBasedOnStatus(@Param("id") Long id,@Param("status") String status);
 }

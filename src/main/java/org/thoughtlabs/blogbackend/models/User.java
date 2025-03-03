@@ -77,8 +77,13 @@ public class User{
 
     private String providerId = null;
 
-    @Column(nullable = false)
-    private boolean emailVerified = false;
+    @Column(name = "is_email_verified", nullable = false    )
+    private boolean isEmailVerified = false;
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("id desc")
+    private List<VerificationToken> verificationTokens = new ArrayList<>();
 
 //    @PrePersist
 //    @PreUpdate

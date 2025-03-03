@@ -1,6 +1,7 @@
 package org.thoughtlabs.blogbackend.controllers;
 
 import org.thoughtlabs.blogbackend.exceptions.PostNotFoundException;
+import org.thoughtlabs.blogbackend.models.EPostStatus;
 import org.thoughtlabs.blogbackend.models.Post;
 import org.thoughtlabs.blogbackend.services.PostService;
 import org.thoughtlabs.blogbackend.services.UserServiceImpl;
@@ -52,8 +53,8 @@ public class PostController {
     }
 
     @PutMapping("/publish")
-    public ResponseEntity<Post> publishPost(@RequestBody Post post, @RequestParam(required = false) Long draftId) {
-        return ResponseEntity.ok(postService.publish(post, draftId));
+    public ResponseEntity<Post> publishPost(@RequestBody(required = false) Post post, @RequestParam(required = false) Long draftId) {
+        return ResponseEntity.ok(postService.publishPost(post, draftId));
     }
 
 //    @PostMapping("/save-draft")

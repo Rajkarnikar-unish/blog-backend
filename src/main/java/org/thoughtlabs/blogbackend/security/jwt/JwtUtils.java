@@ -47,6 +47,24 @@ public class JwtUtils {
 //            .signWith(key(), SignatureAlgorithm.HS512)
 //            .compact();
 
+    public String generateEmailVerificationToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 24*60*60*1000))
+                .signWith(key(), SignatureAlgorithm.HS512)
+                .compact();
+    }
+
+    public String getEmailFromVerificationToken(String token) {
+        return Jwts.parser()
+                .setSigningKey(key())
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
+    }
+
     public String generateTokenFromOAuth2Username(Authentication authentication) {
         return generateToken(authentication);
     }

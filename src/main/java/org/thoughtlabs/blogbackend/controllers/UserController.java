@@ -5,6 +5,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.thoughtlabs.blogbackend.exceptions.FileUploadFailureException;
 import org.thoughtlabs.blogbackend.exceptions.PostsNotFoundException;
+import org.thoughtlabs.blogbackend.models.EPostStatus;
 import org.thoughtlabs.blogbackend.models.Post;
 import org.thoughtlabs.blogbackend.models.User;
 import org.thoughtlabs.blogbackend.payload.request.UserUpdateRequest;
@@ -57,9 +58,15 @@ public class UserController {
     }
 
     @GetMapping("/{id}/posts")
-    public ResponseEntity<List<Post>> getAllPostsByUser(@PathVariable Long id) throws PostsNotFoundException {
-        return ResponseEntity.ok(userService.getPostsByUserId(id));
+    public ResponseEntity<List<Post>> getUserPostsByStatus(@PathVariable Long id, @RequestParam(required=false, defaultValue = "published") EPostStatus status){
+        List<Post> posts = userService.getUsersPostByStatus(id, status);
+        return ResponseEntity.ok(posts);
     }
+
+//    @GetMapping("/{id}/posts")
+//    public ResponseEntity<List<Post>> getAllPostsByUser(@PathVariable Long id) throws PostsNotFoundException {
+//        return ResponseEntity.ok(userService.getPostsByUserId(id));
+//    }
 
     @PostMapping("/upload-profile-image")
     public ResponseEntity<MessageResponse> uploadProfileImage(@RequestParam(value = "profile_image") MultipartFile file,
