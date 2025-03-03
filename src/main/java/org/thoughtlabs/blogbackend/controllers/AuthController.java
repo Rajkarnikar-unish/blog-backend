@@ -1,8 +1,11 @@
 package org.thoughtlabs.blogbackend.controllers;
 
+import com.amazonaws.services.memorydb.model.UserAlreadyExistsException;
+import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.thoughtlabs.blogbackend.exceptions.EmailAlreadyExistsException;
+import org.thoughtlabs.blogbackend.exceptions.EmailFailureException;
 import org.thoughtlabs.blogbackend.exceptions.UsernameAlreadyExistsException;
 import org.thoughtlabs.blogbackend.models.ERole;
 import org.thoughtlabs.blogbackend.models.RefreshToken;
@@ -30,6 +33,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import org.thoughtlabs.blogbackend.services.UserServiceImpl;
 
 import java.util.HashSet;
 import java.util.List;
@@ -54,6 +58,9 @@ public class AuthController {
     RefreshTokenService refreshTokenService;
 
     @Autowired
+    private UserServiceImpl userService;
+
+    @Autowired
     PasswordEncoder encoder;
 
     @Autowired
@@ -63,11 +70,6 @@ public class AuthController {
     public ResponseEntity<?> getLoggedInUserDetails(@AuthenticationPrincipal UserDetailsImpl userDetails) {
         return ResponseEntity.ok(userDetails);
     }
-
-//    @PostMapping("/oauth2/login/success")
-//    public ResponseEntity<?> getUserInfoWithProvider(@AuthenticationPrincipal OAuth2User oAuth2User) {
-//        return ResponseEntity.ok(oAuth2User.getAttributes());
-//    }
 
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
@@ -119,60 +121,20 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<?> registerUser(@Valid @RequestBody RegistrationRequest registrationRequest) {
-        if (userRepository.existsByUsername(registrationRequest.getUsername())) {
-            throw new UsernameAlreadyExistsException("Error: Username is already taken!");
+    public ResponseEntity<?> registerUser(@Valid @RequestBody RegistrationRequest registrationRequest) throws MessagingException {
+        try {
+            userService.registerUser(registrationRequest);
+
+            MessageResponse response = new MessageResponse(
+                    HttpStatus.CREATED.value(),
+                    "User registered successfully!");
+
+            return ResponseEntity.ok(response);
+
+        } catch (UserAlreadyExistsException ex) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        } catch (EmailFailureException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
-
-        if (userRepository.existsByEmail(registrationRequest.getEmail())) {
-            throw new EmailAlreadyExistsException("Error: Email already in use!");
-        }
-
-        User user = new User(
-                registrationRequest.getUsername(),
-                registrationRequest.getEmail(),
-                registrationRequest.getFirstName(),
-                registrationRequest.getLastName(),
-                encoder.encode(registrationRequest.getPassword()),
-                "https://d3cdw8ymz2nt7l.cloudfront.net/profileImages/default_avatar.jpg"                );
-
-        Set<String> strRoles = registrationRequest.getRole();
-        Set<Role> roles = new HashSet<>();
-
-        if (strRoles == null) {
-            Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                    .orElseThrow(() -> new RuntimeException("Error: Role not found!"));
-            roles.add(userRole);
-        } else {
-            strRoles.forEach(role -> {
-                switch (role) {
-                    case "admin":
-                        Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
-                                .orElseThrow(() -> new RuntimeException("Error: Role not found!"));
-                        roles.add(adminRole);
-
-                        break;
-                    case "mod":
-                        Role modRole = roleRepository.findByName(ERole.ROLE_MODERATOR)
-                                .orElseThrow(() -> new RuntimeException("Error: Role not found!"));
-                        roles.add(modRole);
-
-                        break;
-                    default:
-                        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
-                                .orElseThrow(() -> new RuntimeException("Error: Role not found!"));
-                        roles.add(userRole);
-                }
-            });
-        }
-
-        user.setRoles(roles);
-        userRepository.save(user);
-
-        MessageResponse response = new MessageResponse(
-                HttpStatus.CREATED.value(),
-                "User registered successfully!");
-
-        return ResponseEntity.ok(response);
     }
 }

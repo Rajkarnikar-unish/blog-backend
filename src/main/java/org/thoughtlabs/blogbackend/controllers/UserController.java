@@ -59,7 +59,6 @@ public class UserController {
 
     @GetMapping("/{id}/posts")
     public ResponseEntity<List<Post>> getUserPostsByStatus(@PathVariable Long id, @RequestParam(required=false, defaultValue = "published") EPostStatus status){
-        log.info("STATUS ---->{}", status);
         List<Post> posts = userService.getUsersPostByStatus(id, status);
         return ResponseEntity.ok(posts);
     }

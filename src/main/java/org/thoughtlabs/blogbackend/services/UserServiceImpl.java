@@ -1,14 +1,17 @@
 package org.thoughtlabs.blogbackend.services;
 
+import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.thoughtlabs.blogbackend.exceptions.EmailNotFoundException;
-import org.thoughtlabs.blogbackend.models.EPostStatus;
-import org.thoughtlabs.blogbackend.models.Post;
-import org.thoughtlabs.blogbackend.models.User;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.thoughtlabs.blogbackend.exceptions.EmailAlreadyExistsException;
+import org.thoughtlabs.blogbackend.exceptions.EmailFailureException;
+import org.thoughtlabs.blogbackend.exceptions.UsernameAlreadyExistsException;
+import org.thoughtlabs.blogbackend.models.*;
+import org.thoughtlabs.blogbackend.payload.request.RegistrationRequest;
 import org.thoughtlabs.blogbackend.payload.request.UserUpdateRequest;
 import org.thoughtlabs.blogbackend.repositories.PostRepository;
 import org.thoughtlabs.blogbackend.repositories.RefreshTokenRepository;
+import org.thoughtlabs.blogbackend.repositories.RoleRepository;
 import org.thoughtlabs.blogbackend.repositories.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,12 +20,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
+import org.thoughtlabs.blogbackend.security.jwt.JwtUtils;
 
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -33,10 +35,22 @@ public class UserServiceImpl implements UserService {
     UserRepository userRepository;
 
     @Autowired
+    RoleRepository roleRepository;
+
+    @Autowired
     PostRepository postRepository;
 
     @Autowired
+    JwtUtils jwtUtils;
+
+    @Autowired
     RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    EmailService emailService;
+
+    @Autowired
+    PasswordEncoder encoder;
 
     @Override
     public List<User> getAllUsersByRole(String roleName) {
@@ -59,9 +73,56 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User findByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User with "+ username +" not found"));
+    public User registerUser(RegistrationRequest registrationRequest) throws UsernameAlreadyExistsException, EmailAlreadyExistsException, MessagingException, EmailFailureException {
+        if(userRepository.existsByUsername(registrationRequest.getUsername())) {
+            throw new UsernameAlreadyExistsException("Error: Username is already taken!");
+        }
+
+        if(userRepository.existsByEmail(registrationRequest.getEmail())) {
+            throw new EmailAlreadyExistsException("Error: Email address already in use!");
+        }
+
+        User user = new User();
+        user.setEmail(registrationRequest.getEmail());
+        user.setUsername(registrationRequest.getUsername());
+        user.setFirstName(registrationRequest.getFirstName());
+        user.setLastName(registrationRequest.getLastName());
+        user.setPassword(encoder.encode(registrationRequest.getPassword()));
+
+        VerificationToken verificationToken = createVerificationToken(user);
+        emailService.sendEmailVerificationEmail(verificationToken);
+
+        Set<String> strRoles = registrationRequest.getRole();
+        Set<Role> roles = new HashSet<>();
+
+        if(strRoles == null) {
+            Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+                    .orElseThrow(() -> new RuntimeException("Error: Role not found!"));
+            roles.add(userRole);
+        } else {
+            strRoles.forEach(role -> {
+                switch(role) {
+                    case "admin":
+                        Role adminRole = roleRepository.findByName(ERole.ROLE_ADMIN)
+                                .orElseThrow(() -> new RuntimeException("Error: Role not found!"));
+                        roles.add(adminRole);
+                        break;
+                    case "mod":
+                        Role modRole = roleRepository.findByName(ERole.ROLE_MODERATOR)
+                                .orElseThrow(() -> new RuntimeException("Error: Role not found!"));
+                        roles.add(modRole);
+                        break;
+                    default:
+                        Role userRole = roleRepository.findByName(ERole.ROLE_USER)
+                                .orElseThrow(() -> new RuntimeException("Error: Role not found!"));
+                        roles.add(userRole);
+                        break;
+                }
+            });
+        }
+
+        user.setRoles(roles);
+        return userRepository.save(user);
     }
 
     @Override
@@ -108,6 +169,16 @@ public class UserServiceImpl implements UserService {
             return "Your account has been deleted successfully.";
         }
         return "Not authorized to delete this account!";
+    }
+
+    public VerificationToken createVerificationToken(User user) {
+        VerificationToken verificationToken = new VerificationToken();
+        verificationToken.setToken(jwtUtils.generateEmailVerificationToken(user.getEmail()));
+        verificationToken.setCreatedAt(LocalDateTime.now());
+        verificationToken.setUser(user);
+        user.getVerificationTokens().add(verificationToken);
+
+        return verificationToken;
     }
 
     @Override
