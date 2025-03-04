@@ -3,11 +3,14 @@ package org.thoughtlabs.blogbackend.services;
 import jakarta.mail.MessagingException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.thoughtlabs.blogbackend.exceptions.EmailFailureException;
+import org.thoughtlabs.blogbackend.exceptions.UserNotVerifiedException;
 import org.thoughtlabs.blogbackend.models.EPostStatus;
 import org.thoughtlabs.blogbackend.models.Post;
 import org.thoughtlabs.blogbackend.models.User;
+import org.thoughtlabs.blogbackend.payload.request.LoginRequest;
 import org.thoughtlabs.blogbackend.payload.request.RegistrationRequest;
 import org.thoughtlabs.blogbackend.payload.request.UserUpdateRequest;
+import org.thoughtlabs.blogbackend.payload.response.JwtResponse;
 
 import java.util.List;
 import java.util.Map;
@@ -21,6 +24,8 @@ public interface UserService {
 //    public List<Post> getPostsByUserId(Long id);
 
     public User registerUser(RegistrationRequest registrationRequest) throws MessagingException, EmailFailureException;
+
+    public JwtResponse loginUser(LoginRequest loginRequest) throws MessagingException, EmailFailureException, UserNotVerifiedException;
 
     public User updateUserProfile(Long id, UserUpdateRequest userUpdateRequest);
 
