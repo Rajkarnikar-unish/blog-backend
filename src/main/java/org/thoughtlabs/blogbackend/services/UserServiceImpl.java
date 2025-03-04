@@ -2,17 +2,20 @@ package org.thoughtlabs.blogbackend.services;
 
 import jakarta.mail.MessagingException;
 import jakarta.transaction.Transactional;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.thoughtlabs.blogbackend.exceptions.EmailAlreadyExistsException;
 import org.thoughtlabs.blogbackend.exceptions.EmailFailureException;
+import org.thoughtlabs.blogbackend.exceptions.UserNotVerifiedException;
 import org.thoughtlabs.blogbackend.exceptions.UsernameAlreadyExistsException;
 import org.thoughtlabs.blogbackend.models.*;
+import org.thoughtlabs.blogbackend.payload.request.LoginRequest;
 import org.thoughtlabs.blogbackend.payload.request.RegistrationRequest;
 import org.thoughtlabs.blogbackend.payload.request.UserUpdateRequest;
-import org.thoughtlabs.blogbackend.repositories.PostRepository;
-import org.thoughtlabs.blogbackend.repositories.RefreshTokenRepository;
-import org.thoughtlabs.blogbackend.repositories.RoleRepository;
-import org.thoughtlabs.blogbackend.repositories.UserRepository;
+import org.thoughtlabs.blogbackend.payload.response.JwtResponse;
+import org.thoughtlabs.blogbackend.repositories.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,10 +24,13 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ReflectionUtils;
 import org.thoughtlabs.blogbackend.security.jwt.JwtUtils;
+import org.thoughtlabs.blogbackend.security.services.RefreshTokenService;
+import org.thoughtlabs.blogbackend.security.services.UserDetailsImpl;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -41,10 +47,19 @@ public class UserServiceImpl implements UserService {
     PostRepository postRepository;
 
     @Autowired
+    AuthenticationManager authenticationManager;
+
+    @Autowired
     JwtUtils jwtUtils;
 
     @Autowired
     RefreshTokenRepository refreshTokenRepository;
+
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
+    @Autowired
+    private VerificationTokenRepository verificationTokenRepository;
 
     @Autowired
     EmailService emailService;
@@ -123,6 +138,59 @@ public class UserServiceImpl implements UserService {
 
         user.setRoles(roles);
         return userRepository.save(user);
+    }
+
+    @Override
+    public JwtResponse loginUser(LoginRequest loginRequest) throws MessagingException, EmailFailureException, UserNotVerifiedException {
+        Optional<User> optionalUser = userRepository.findByUsername(loginRequest.getUsername());
+
+        if(optionalUser.isPresent()) {
+            User user = optionalUser.get();
+
+            if(!user.isEmailVerified()) {
+                List<VerificationToken> verificationTokens = user.getVerificationTokens();
+                boolean resend = verificationTokens.isEmpty() || verificationTokens.get(0).getCreatedAt()
+                        .isBefore(LocalDateTime.now().minusHours(24));
+
+                if(resend) {
+                    VerificationToken verificationToken = createVerificationToken(user);
+                    verificationTokenRepository.save(verificationToken);
+                    emailService.sendEmailVerificationEmail(verificationToken);
+                }
+
+                throw new UserNotVerifiedException(resend);
+            }
+
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getUsername(),
+                            loginRequest.getPassword()
+                    )
+            );
+
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
+            String jwt = jwtUtils.generateJwtToken(userDetails);
+
+            List<String> roles = userDetails.getAuthorities().stream()
+                    .map(item -> item.getAuthority())
+                    .collect(Collectors.toList());
+
+            RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
+
+            return new JwtResponse(
+                    jwt,
+                    refreshToken.getToken(),
+                    userDetails.getId(),
+                    userDetails.getUsername(),
+                    userDetails.getFirstName(),
+                    userDetails.getLastName(),
+                    userDetails.getEmail(),
+                    roles,
+                    userDetails.getProfileImageUrl()
+            );
+        }
+        throw new UsernameNotFoundException("Invalid username or password");
     }
 
     @Override

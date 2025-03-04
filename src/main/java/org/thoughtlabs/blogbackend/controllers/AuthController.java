@@ -3,14 +3,9 @@ package org.thoughtlabs.blogbackend.controllers;
 import com.amazonaws.services.memorydb.model.UserAlreadyExistsException;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.thoughtlabs.blogbackend.exceptions.EmailAlreadyExistsException;
 import org.thoughtlabs.blogbackend.exceptions.EmailFailureException;
-import org.thoughtlabs.blogbackend.exceptions.UsernameAlreadyExistsException;
-import org.thoughtlabs.blogbackend.models.ERole;
+import org.thoughtlabs.blogbackend.exceptions.UserNotVerifiedException;
 import org.thoughtlabs.blogbackend.models.RefreshToken;
-import org.thoughtlabs.blogbackend.models.Role;
-import org.thoughtlabs.blogbackend.models.User;
 import org.thoughtlabs.blogbackend.payload.request.LoginRequest;
 import org.thoughtlabs.blogbackend.payload.request.RegistrationRequest;
 import org.thoughtlabs.blogbackend.payload.request.TokenRefreshRequest;
@@ -72,37 +67,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest) {
-
-        // Authenticating the user details from the payload LoginRequest with username
-        // and password
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        loginRequest.getUsername(),
-                        loginRequest.getPassword()
-                )
-        );
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
-        String jwt = jwtUtils.generateJwtToken(userDetails);
-
-        List<String> roles = userDetails.getAuthorities().stream()
-                .map(item -> item.getAuthority())// can be replaced with GrantAuthority::getAuthority
-                .collect(Collectors.toList());
-
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
-
-        return ResponseEntity.ok(new JwtResponse(
-                jwt,
-                refreshToken.getToken(),
-                userDetails.getId(),
-                userDetails.getUsername(),
-                userDetails.getFirstName(),
-                userDetails.getLastName(),
-                userDetails.getEmail(),
-                roles,
-                userDetails.getProfileImageUrl()));
+    public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest loginRequest) throws UserNotVerifiedException, MessagingException, EmailFailureException {
+        JwtResponse jwtResponse = userService.loginUser(loginRequest);
+        return ResponseEntity.ok(jwtResponse);
     }
 
     @PostMapping("/refresh-token")
