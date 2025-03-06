@@ -1,9 +1,7 @@
 package org.thoughtlabs.blogbackend.advice;
 
-import org.thoughtlabs.blogbackend.exceptions.EmailAlreadyExistsException;
-import org.thoughtlabs.blogbackend.exceptions.FileUploadFailureException;
-import org.thoughtlabs.blogbackend.exceptions.PostNotFoundException;
-import org.thoughtlabs.blogbackend.exceptions.UsernameAlreadyExistsException;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.thoughtlabs.blogbackend.exceptions.*;
 import org.thoughtlabs.blogbackend.models.Post;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +12,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import java.time.Instant;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class ControllerAdvisor extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(PostNotFoundException.class)
@@ -42,6 +40,17 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
                 request.getDescription(false)
         );
         return new ResponseEntity<>(errorMessage, HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler(UserNotVerifiedException.class)
+    public ResponseEntity<ErrorMessage> handleUserNotVerifiedException(UserNotVerifiedException ex, WebRequest request) {
+        ErrorMessage message = new ErrorMessage(
+                HttpStatus.CONFLICT.value(),
+                Instant.now().toEpochMilli(),
+                ex.getMessage(),
+                request.getDescription(false)
+        );
+        return new ResponseEntity<>(message, HttpStatus.CONFLICT);
     }
 
     @ExceptionHandler(FileUploadFailureException.class)

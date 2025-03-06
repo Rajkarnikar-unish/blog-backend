@@ -23,6 +23,8 @@ public interface UserService {
 
 //    public List<Post> getPostsByUserId(Long id);
 
+    public boolean verifyEmail(String token);
+
     public User registerUser(RegistrationRequest registrationRequest) throws MessagingException, EmailFailureException;
 
     public JwtResponse loginUser(LoginRequest loginRequest) throws MessagingException, EmailFailureException, UserNotVerifiedException;

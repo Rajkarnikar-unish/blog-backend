@@ -69,6 +69,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> loginUser(@Valid @RequestBody LoginRequest loginRequest) throws UserNotVerifiedException, MessagingException, EmailFailureException {
         JwtResponse jwtResponse = userService.loginUser(loginRequest);
+        jwtResponse.setStatus(HttpStatus.OK.value());
         return ResponseEntity.ok(jwtResponse);
     }
 
@@ -102,6 +103,19 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
         } catch (EmailFailureException ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<?> verifyEmail(@RequestParam String token) {
+        if(userService.verifyEmail(token)) {
+            MessageResponse response = new MessageResponse(
+                    HttpStatus.OK.value(),
+                    "You have successfully verified you email."
+            );
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
     }
 }
