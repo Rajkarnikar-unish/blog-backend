@@ -140,6 +140,24 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+    @Transactional
+    @Override
+    public boolean verifyEmail(String token) {
+        Optional<VerificationToken> optionalVerificationToken = verificationTokenRepository.findByToken(token);
+        if(optionalVerificationToken.isPresent()) {
+            VerificationToken verificationToken = optionalVerificationToken.get();
+            User user = verificationToken.getUser();
+
+            if(!user.isEmailVerified()) {
+                user.setEmailVerified(true);
+                userRepository.save(user);
+                verificationTokenRepository.deleteByUser(user);
+                return true;
+            }
+        }
+        return false;
+    }
+
     @Override
     public JwtResponse loginUser(LoginRequest loginRequest) throws MessagingException, EmailFailureException, UserNotVerifiedException {
         Optional<User> optionalUser = userRepository.findByUsername(loginRequest.getUsername());
@@ -158,7 +176,7 @@ public class UserServiceImpl implements UserService {
                     emailService.sendEmailVerificationEmail(verificationToken);
                 }
 
-                throw new UserNotVerifiedException(resend);
+                throw new UserNotVerifiedException(resend, "Please verify your email address.");
             }
 
             Authentication authentication = authenticationManager.authenticate(

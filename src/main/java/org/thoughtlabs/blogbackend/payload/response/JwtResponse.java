@@ -8,6 +8,7 @@ import java.util.List;
 @Getter
 @Setter
 public class JwtResponse {
+    private int status;
     private String token;
     private String type="Bearer";
     private String refreshToken;
@@ -21,6 +22,19 @@ public class JwtResponse {
     private String profileImageUrl;
 
     public JwtResponse(String accessToken, String refreshToken, Long id, String username, String firstName, String lastName, String email, List<String> roles, String profileImageUrl) {
+        this.token = accessToken;
+        this.refreshToken = refreshToken;
+        this.id = id;
+        this.username = username;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.roles = roles;
+        this.profileImageUrl = profileImageUrl;
+    }
+
+    public JwtResponse(int status, String accessToken, String refreshToken, Long id, String username, String firstName, String lastName, String email, List<String> roles, String profileImageUrl) {
+        this.status = status;
         this.token = accessToken;
         this.refreshToken = refreshToken;
         this.id = id;
