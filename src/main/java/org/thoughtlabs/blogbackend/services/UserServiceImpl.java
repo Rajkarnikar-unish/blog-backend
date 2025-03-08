@@ -6,12 +6,10 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.thoughtlabs.blogbackend.exceptions.EmailAlreadyExistsException;
-import org.thoughtlabs.blogbackend.exceptions.EmailFailureException;
-import org.thoughtlabs.blogbackend.exceptions.UserNotVerifiedException;
-import org.thoughtlabs.blogbackend.exceptions.UsernameAlreadyExistsException;
+import org.thoughtlabs.blogbackend.exceptions.*;
 import org.thoughtlabs.blogbackend.models.*;
 import org.thoughtlabs.blogbackend.payload.request.LoginRequest;
+import org.thoughtlabs.blogbackend.payload.request.PasswordResetBody;
 import org.thoughtlabs.blogbackend.payload.request.RegistrationRequest;
 import org.thoughtlabs.blogbackend.payload.request.UserUpdateRequest;
 import org.thoughtlabs.blogbackend.payload.response.JwtResponse;
@@ -159,6 +157,31 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void forgotPassword(String email) throws EmailFailureException {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if(optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            String token = jwtUtils.generatePasswordResetToken(email);
+            emailService.sendPasswordResetEmail(user, token);
+        } else {
+            throw new EmailNotFoundException("The email address you provided is not available!");
+        }
+    }
+
+    @Override
+    public boolean resetPassword(PasswordResetBody passwordResetBody) {
+        String email = jwtUtils.getEmailFromPasswordResetToken(passwordResetBody.getToken());
+        Optional<User> optionalUser = userRepository.findByEmail(email);
+        if(optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            user.setPassword(encoder.encode(passwordResetBody.getPassword()));
+            userRepository.save(user);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public JwtResponse loginUser(LoginRequest loginRequest) throws MessagingException, EmailFailureException, UserNotVerifiedException {
         Optional<User> optionalUser = userRepository.findByUsername(loginRequest.getUsername());
 
@@ -267,43 +290,43 @@ public class UserServiceImpl implements UserService {
         return verificationToken;
     }
 
-    @Override
-    public User createOrUpdateOAuth2User(String username, String email, String firstName, String lastName, String profileImageUrl, String provider) {
-        return userRepository.findByEmail(email).map(existingUser -> {
-            boolean isUpdated = false;
-            if (!username.equals(existingUser.getUsername())) {
-                existingUser.setUsername(username);
-                isUpdated = true;
-            }
-            if(!email.equals(existingUser.getEmail())) {
-                existingUser.setEmail(email);
-                isUpdated = true;
-            }
-            if(!firstName.equals(existingUser.getFirstName())) {
-                existingUser.setFirstName(firstName);
-                isUpdated = true;
-            }
-            if(!lastName.equals(existingUser.getLastName())) {
-                existingUser.setLastName(lastName);
-                isUpdated = true;
-            }
-//            if(existingUser.getProviderName() == null || !provider.equals(existingUser.getProviderName())) {
-//                existingUser.setProviderName(provider);
+//    @Override
+//    public User createOrUpdateOAuth2User(String username, String email, String firstName, String lastName, String profileImageUrl, String provider) {
+//        return userRepository.findByEmail(email).map(existingUser -> {
+//            boolean isUpdated = false;
+//            if (!username.equals(existingUser.getUsername())) {
+//                existingUser.setUsername(username);
 //                isUpdated = true;
 //            }
-            if(isUpdated) userRepository.save(existingUser);
-            return existingUser;
-        }).orElseGet(() -> {
-            User user = User.builder()
-                    .username(username)
-                    .email(email)
-                    .firstName(firstName)
-                    .lastName(lastName)
-                    .profileImageUrl(profileImageUrl)
-//                    .providerName(provider)
-                    .password("OAUTH_DEFAULT_PASSWORD")
-                    .build();
-            return userRepository.save(user);
-        });
-    }
+//            if(!email.equals(existingUser.getEmail())) {
+//                existingUser.setEmail(email);
+//                isUpdated = true;
+//            }
+//            if(!firstName.equals(existingUser.getFirstName())) {
+//                existingUser.setFirstName(firstName);
+//                isUpdated = true;
+//            }
+//            if(!lastName.equals(existingUser.getLastName())) {
+//                existingUser.setLastName(lastName);
+//                isUpdated = true;
+//            }
+////            if(existingUser.getProviderName() == null || !provider.equals(existingUser.getProviderName())) {
+////                existingUser.setProviderName(provider);
+////                isUpdated = true;
+////            }
+//            if(isUpdated) userRepository.save(existingUser);
+//            return existingUser;
+//        }).orElseGet(() -> {
+//            User user = User.builder()
+//                    .username(username)
+//                    .email(email)
+//                    .firstName(firstName)
+//                    .lastName(lastName)
+//                    .profileImageUrl(profileImageUrl)
+////                    .providerName(provider)
+//                    .password("OAUTH_DEFAULT_PASSWORD")
+//                    .build();
+//            return userRepository.save(user);
+//        });
+//    }
 }
