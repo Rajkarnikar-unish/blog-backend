@@ -56,9 +56,18 @@ public class JwtUtils {
                 .compact();
     }
 
-    public String getEmailFromVerificationToken(String token) {
+    public String generatePasswordResetToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 24*60*60*1000))
+                .signWith(key(), SignatureAlgorithm.HS512)
+                .compact();
+    }
+
+    public String getEmailFromPasswordResetToken(String token) {
         return Jwts.parser()
-                .setSigningKey(key())
+                .setSigningKey(jwtSecret)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()

@@ -4,9 +4,11 @@ import com.amazonaws.services.memorydb.model.UserAlreadyExistsException;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import org.thoughtlabs.blogbackend.exceptions.EmailFailureException;
+import org.thoughtlabs.blogbackend.exceptions.EmailNotFoundException;
 import org.thoughtlabs.blogbackend.exceptions.UserNotVerifiedException;
 import org.thoughtlabs.blogbackend.models.RefreshToken;
 import org.thoughtlabs.blogbackend.payload.request.LoginRequest;
+import org.thoughtlabs.blogbackend.payload.request.PasswordResetBody;
 import org.thoughtlabs.blogbackend.payload.request.RegistrationRequest;
 import org.thoughtlabs.blogbackend.payload.request.TokenRefreshRequest;
 import org.thoughtlabs.blogbackend.payload.response.JwtResponse;
@@ -116,6 +118,35 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<?> forgotPassword(@RequestParam String email) {
+        try {
+            userService.forgotPassword(email);
+            MessageResponse response = new MessageResponse(
+                    HttpStatus.OK.value(),
+                    "Please check your email for updating your password."
+            );
+            return ResponseEntity.ok(response);
+        } catch (EmailFailureException ex) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (EmailNotFoundException ex) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<?> resetPassword(@Valid @RequestBody PasswordResetBody passwordResetBody) {
+        if(userService.resetPassword(passwordResetBody)) {
+            MessageResponse response = new MessageResponse(
+                    HttpStatus.OK.value(),
+                    "Password reset successful."
+            );
+            return ResponseEntity.ok(response);
+        }else {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 }

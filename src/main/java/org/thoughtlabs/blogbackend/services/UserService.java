@@ -1,13 +1,13 @@
 package org.thoughtlabs.blogbackend.services;
 
 import jakarta.mail.MessagingException;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.thoughtlabs.blogbackend.exceptions.EmailFailureException;
 import org.thoughtlabs.blogbackend.exceptions.UserNotVerifiedException;
 import org.thoughtlabs.blogbackend.models.EPostStatus;
 import org.thoughtlabs.blogbackend.models.Post;
 import org.thoughtlabs.blogbackend.models.User;
 import org.thoughtlabs.blogbackend.payload.request.LoginRequest;
+import org.thoughtlabs.blogbackend.payload.request.PasswordResetBody;
 import org.thoughtlabs.blogbackend.payload.request.RegistrationRequest;
 import org.thoughtlabs.blogbackend.payload.request.UserUpdateRequest;
 import org.thoughtlabs.blogbackend.payload.response.JwtResponse;
@@ -25,6 +25,10 @@ public interface UserService {
 
     public boolean verifyEmail(String token);
 
+    public void forgotPassword(String email) throws EmailFailureException;
+
+    public boolean resetPassword(PasswordResetBody passwordResetBody);
+
     public User registerUser(RegistrationRequest registrationRequest) throws MessagingException, EmailFailureException;
 
     public JwtResponse loginUser(LoginRequest loginRequest) throws MessagingException, EmailFailureException, UserNotVerifiedException;
@@ -35,5 +39,5 @@ public interface UserService {
 
     public String deleteUserAccount(Long id);
 
-    public User createOrUpdateOAuth2User(String username, String email, String firstName, String lastName, String profileImageUrl, String provider);
+//    public User createOrUpdateOAuth2User(String username, String email, String firstName, String lastName, String profileImageUrl, String provider);
 }
