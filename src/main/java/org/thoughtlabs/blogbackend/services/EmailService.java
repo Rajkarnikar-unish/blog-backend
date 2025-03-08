@@ -59,13 +59,14 @@ public class EmailService {
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
             String resetPasswordUrl = url + "/api/auth/reset-password?token=" + token;
+            String userFirstName = user.getFirstName().substring(0, 1).toUpperCase() + user.getFirstName().substring(1);
 
-            String resetPasswordContent = "<p>Dear " + user.getFirstName() + ",</p>"
+            String resetPasswordContent = "<p>Dear " + userFirstName + ",</p>"
                     + "<p>We received a request to reset your password for your <b>ThoughtLabs</b> account. If you made this request, please click the button below to reset your password:</p>"
                     + "<p><a href=\"" + resetPasswordUrl + "\" style=\"background-color: #f44336; color: white; padding: 10px 20px; text-decoration: none;\">Recover Your Account</a></p>"
                     + "<p>If the button above doesn't work, copy and paste this link into your browser:</p>"
                     + "<p><a href=\"" + resetPasswordUrl + "\">" + resetPasswordUrl + "</a></p>"
-                    + "<p>This reset link will expire in <b>1 hour</b>.</p>"
+                    + "<p>This reset link will expire in <b>30 mins</b>.</p>"
                     + "<p>If you did not request a password reset, you can safely ignore this email.</p>"
                     + "<p>Best regards,</p>"
                     + "<p><b>ThoughtLabs Co</b></p>";
@@ -80,5 +81,4 @@ public class EmailService {
             throw new EmailFailureException("Failed to send email to " + user.getEmail(), ex);
         }
     }
-
 }
