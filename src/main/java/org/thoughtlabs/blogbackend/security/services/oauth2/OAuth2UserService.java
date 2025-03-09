@@ -1,6 +1,7 @@
 package org.thoughtlabs.blogbackend.security.services.oauth2;
 
 import io.micrometer.common.util.StringUtils;
+import jakarta.mail.MessagingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.InternalAuthenticationServiceException;
@@ -11,10 +12,8 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
-import org.thoughtlabs.blogbackend.models.AuthProvider;
-import org.thoughtlabs.blogbackend.models.ERole;
-import org.thoughtlabs.blogbackend.models.Role;
-import org.thoughtlabs.blogbackend.models.User;
+import org.thoughtlabs.blogbackend.exceptions.EmailFailureException;
+import org.thoughtlabs.blogbackend.models.*;
 import org.thoughtlabs.blogbackend.repositories.RoleRepository;
 import org.thoughtlabs.blogbackend.repositories.UserRepository;
 import org.thoughtlabs.blogbackend.security.exception.OAuth2AuthenticationProcessingException;
@@ -22,6 +21,8 @@ import org.thoughtlabs.blogbackend.security.jwt.JwtUtils;
 import org.thoughtlabs.blogbackend.security.services.UserDetailsImpl;
 import org.thoughtlabs.blogbackend.security.services.oauth2.user.OAuth2UserInfo;
 import org.thoughtlabs.blogbackend.security.services.oauth2.user.OAuth2UserInfoFactory;
+import org.thoughtlabs.blogbackend.services.EmailService;
+import org.thoughtlabs.blogbackend.services.UserService;
 import org.thoughtlabs.blogbackend.services.UserServiceImpl;
 
 import javax.naming.AuthenticationException;
@@ -42,6 +43,12 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private EmailService emailService;
+
     @Override
     public OAuth2User loadUser(OAuth2UserRequest oAuth2UserRequest) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(oAuth2UserRequest);
@@ -53,7 +60,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         }
     }
 
-    private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) {
+    private OAuth2User processOAuth2User(OAuth2UserRequest oAuth2UserRequest, OAuth2User oAuth2User) throws MessagingException, EmailFailureException {
         OAuth2UserInfo oAuth2UserInfo = OAuth2UserInfoFactory.getOAuth2UserInfo(oAuth2UserRequest.getClientRegistration().getRegistrationId(), oAuth2User.getAttributes());
         if(StringUtils.isEmpty(oAuth2UserInfo.getEmail())) {
             throw new OAuth2AuthenticationProcessingException("Email not found from OAuth2 provider!");
@@ -78,7 +85,7 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         return UserDetailsImpl.build(user, oAuth2User.getAttributes());
     }
 
-    private User registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo) {
+    private User registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo) throws MessagingException, EmailFailureException {
         String name = oAuth2UserInfo.getName();
         String[] nameSep = name != null ? name.split(" ") : new String[0];
 
@@ -93,6 +100,9 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                 oAuth2UserInfo.getId(),
                 AuthProvider.valueOf(oAuth2UserRequest.getClientRegistration().getRegistrationId())
         );
+
+        VerificationToken verificationToken = userService.createVerificationToken(user);
+        emailService.sendEmailVerificationEmail(verificationToken);
 
         return userRepository.save(user);
     }

@@ -280,6 +280,7 @@ public class UserServiceImpl implements UserService {
         return "Not authorized to delete this account!";
     }
 
+    @Override
     public VerificationToken createVerificationToken(User user) {
         VerificationToken verificationToken = new VerificationToken();
         verificationToken.setToken(jwtUtils.generateEmailVerificationToken(user.getEmail()));

@@ -6,6 +6,7 @@ import org.thoughtlabs.blogbackend.exceptions.UserNotVerifiedException;
 import org.thoughtlabs.blogbackend.models.EPostStatus;
 import org.thoughtlabs.blogbackend.models.Post;
 import org.thoughtlabs.blogbackend.models.User;
+import org.thoughtlabs.blogbackend.models.VerificationToken;
 import org.thoughtlabs.blogbackend.payload.request.LoginRequest;
 import org.thoughtlabs.blogbackend.payload.request.PasswordResetBody;
 import org.thoughtlabs.blogbackend.payload.request.RegistrationRequest;
@@ -38,6 +39,8 @@ public interface UserService {
     public User patchUserProfile(Long id, Map<String, Object> update);
 
     public String deleteUserAccount(Long id);
+
+    public VerificationToken createVerificationToken(User user);
 
 //    public User createOrUpdateOAuth2User(String username, String email, String firstName, String lastName, String profileImageUrl, String provider);
 }
