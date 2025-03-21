@@ -10,11 +10,12 @@
 	</parent>
 	<groupId>org.thoughtlabs</groupId>
 	<artifactId>blog-backend</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.0.1</version>
 	<name>blog-backend</name>
 	<description>blog-backend</description>
 	<properties>
 		<java.version>17</java.version>
+		<exec.longClasspath>true</exec.longClasspath>
 	</properties>
 	<dependencies>
 		<dependency>

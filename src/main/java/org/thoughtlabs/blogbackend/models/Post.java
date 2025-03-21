@@ -28,7 +28,7 @@ public class Post {
 
     @NotBlank
     @NotNull
-    @Column(name = "content", columnDefinition = "CLOB")
+    @Column(name = "content", columnDefinition = "LONGTEXT")
     private String content;
 
     @ManyToOne//(cascade = CascadeType.ALL)

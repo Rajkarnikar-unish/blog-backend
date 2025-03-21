@@ -16,6 +16,7 @@ import org.thoughtlabs.blogbackend.exceptions.EmailFailureException;
 import org.thoughtlabs.blogbackend.models.*;
 import org.thoughtlabs.blogbackend.repositories.RoleRepository;
 import org.thoughtlabs.blogbackend.repositories.UserRepository;
+import org.thoughtlabs.blogbackend.repositories.VerificationTokenRepository;
 import org.thoughtlabs.blogbackend.security.exception.OAuth2AuthenticationProcessingException;
 import org.thoughtlabs.blogbackend.security.jwt.JwtUtils;
 import org.thoughtlabs.blogbackend.security.services.UserDetailsImpl;
@@ -26,10 +27,8 @@ import org.thoughtlabs.blogbackend.services.UserService;
 import org.thoughtlabs.blogbackend.services.UserServiceImpl;
 
 import javax.naming.AuthenticationException;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -37,6 +36,8 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private VerificationTokenRepository verificationTokenRepository;
 
     @Autowired
     private PasswordEncoder encoder;
@@ -87,14 +88,15 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
     private User registerNewUser(OAuth2UserRequest oAuth2UserRequest, OAuth2UserInfo oAuth2UserInfo) throws MessagingException, EmailFailureException {
         String name = oAuth2UserInfo.getName();
-        String[] nameSep = name != null ? name.split(" ") : new String[0];
+        String[] nameSep = name != null ? name.split(" ", 2) : new String[] {"Unknown", "N/A"};
+        String oauth2Password = UUID.randomUUID().toString();
 
         User user = new User(
                 name,
                 oAuth2UserInfo.getEmail(),
                 nameSep[0],
-                nameSep.length == 2 ? nameSep[1]: "N/A",
-                encoder.encode("OAuth2" + nameSep[0] + "PW"),
+                nameSep.length > 1 ? nameSep[1]: "N/A",
+                encoder.encode(oauth2Password),
                 oAuth2UserInfo.getImageUrl(),
                 roleRepository.findByName(ERole.ROLE_USER).orElseThrow(() -> new RuntimeException("Error: Role not found!")),
                 oAuth2UserInfo.getId(),
@@ -107,12 +109,24 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         return userRepository.save(user);
     }
 
-    private User updateExistingUser(User existingUser, OAuth2UserInfo oAuth2UserInfo) {
+    private User updateExistingUser(User existingUser, OAuth2UserInfo oAuth2UserInfo) throws MessagingException, EmailFailureException {
         String name = oAuth2UserInfo.getName();
         String[] nameSep = name != null ? name.split(" ") : new String[0];
         existingUser.setFirstName(nameSep[0]);
         existingUser.setLastName(nameSep.length==2? nameSep[1]: "N/A");
         existingUser.setProfileImageUrl(oAuth2UserInfo.getImageUrl());
+
+        if(!existingUser.isEmailVerified()) {
+            List<VerificationToken> verificationTokens = existingUser.getVerificationTokens();
+            boolean resendToken = verificationTokens.isEmpty() || verificationTokens.get(0).getCreatedAt()
+                    .isBefore(LocalDateTime.now().minusHours(24));
+
+            if(resendToken) {
+                VerificationToken verificationToken = userService.createVerificationToken(existingUser);
+                verificationTokenRepository.save(verificationToken);
+                emailService.sendEmailVerificationEmail(verificationToken);
+            }
+        }
         return userRepository.save(existingUser);
     }
 }
