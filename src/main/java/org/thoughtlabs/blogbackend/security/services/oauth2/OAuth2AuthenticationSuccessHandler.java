@@ -12,7 +12,9 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.thoughtlabs.blogbackend.config.AppProperties;
+import org.thoughtlabs.blogbackend.models.RefreshToken;
 import org.thoughtlabs.blogbackend.security.jwt.JwtUtils;
+import org.thoughtlabs.blogbackend.security.services.RefreshTokenService;
 import org.thoughtlabs.blogbackend.util.CookieUtils;
 
 import java.io.IOException;
@@ -27,14 +29,21 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
 
     private JwtUtils jwtUtils;
 
+    private RefreshTokenService refreshTokenService;
+
     private AppProperties appProperties;
 
     private HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
 
     @Autowired
-    OAuth2AuthenticationSuccessHandler(JwtUtils jwtUtils, AppProperties appProperties,
-                                       HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository){
+    OAuth2AuthenticationSuccessHandler(
+            JwtUtils jwtUtils,
+            RefreshTokenService refreshTokenService,
+            AppProperties appProperties,
+            HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository
+    ){
         this.jwtUtils = jwtUtils;
+        this.refreshTokenService = refreshTokenService;
         this.appProperties = appProperties;
         this.httpCookieOAuth2AuthorizationRequestRepository = httpCookieOAuth2AuthorizationRequestRepository;
     }
@@ -42,9 +51,11 @@ public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationS
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException, ServletException {
 
-        String token = jwtUtils.generateTokenFromOAuth2Username(authentication);
+        String accessToken = jwtUtils.generateTokenFromOAuth2Username(authentication);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(authentication);
 
-        CookieUtils.addCookie(response, "access_token", token, 60 * 60 * 24);
+        CookieUtils.addCookie(response, "access_token", accessToken, 60 * 60 * 24);
+        CookieUtils.addCookie(response, "refresh_token", refreshToken.getToken(), 60 * 60 * 24 * 7);
 
         String targetUrl = determineTargetUrl(request, response, authentication);
         clearAuthenticationAttributes(request, response);

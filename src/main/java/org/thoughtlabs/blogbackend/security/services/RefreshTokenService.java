@@ -1,7 +1,10 @@
 package org.thoughtlabs.blogbackend.security.services;
 
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
 import org.thoughtlabs.blogbackend.models.RefreshToken;
+import org.thoughtlabs.blogbackend.models.User;
 import org.thoughtlabs.blogbackend.repositories.RefreshTokenRepository;
 import org.thoughtlabs.blogbackend.repositories.UserRepository;
 import org.thoughtlabs.blogbackend.security.exception.TokenRefreshException;
@@ -13,6 +16,7 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class RefreshTokenService {
 
@@ -29,7 +33,26 @@ public class RefreshTokenService {
         return refreshTokenRepository.findByToken(token);
     }
 
-    public RefreshToken createRefreshToken(Long userId) {
+    public RefreshToken createRefreshToken(Object principal) {
+        Long userId;
+
+        if(principal instanceof Long) {
+            userId = (Long) principal;
+        }
+//        else if (principal instanceof String) {
+//            Optional<User> optionalUser = userRepository.findByEmail((String) principal);
+//            if(optionalUser.isPresent()) {
+//                User user = optionalUser.get();
+//                userId = user.getId();
+//            }
+//        }
+        else if(principal instanceof Authentication) {
+            UserDetailsImpl userDetails = (UserDetailsImpl) ((Authentication) principal).getPrincipal();
+            userId = userDetails.getId();
+            log.info("USER ID ----->{}", userId);
+        } else {
+            throw new IllegalArgumentException("Invalid Principal Type!");
+        }
 
         RefreshToken existingToken = refreshTokenRepository.findByUserId(userId).orElse(null);
 

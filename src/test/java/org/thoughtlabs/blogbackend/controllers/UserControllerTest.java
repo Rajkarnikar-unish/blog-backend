@@ -4,7 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.thoughtlabs.blogbackend.models.EPostStatus;
 import org.thoughtlabs.blogbackend.models.Post;
 import org.thoughtlabs.blogbackend.models.User;
+import org.thoughtlabs.blogbackend.repositories.RoleRepository;
 import org.thoughtlabs.blogbackend.repositories.UserRepository;
+import org.thoughtlabs.blogbackend.repositories.VerificationTokenRepository;
+import org.thoughtlabs.blogbackend.security.jwt.AuthEntryPointJwt;
+import org.thoughtlabs.blogbackend.security.jwt.JwtUtils;
+import org.thoughtlabs.blogbackend.security.services.UserDetailsServiceImpl;
+import org.thoughtlabs.blogbackend.security.services.oauth2.OAuth2AuthenticationFailureHandler;
+import org.thoughtlabs.blogbackend.security.services.oauth2.OAuth2AuthenticationSuccessHandler;
+import org.thoughtlabs.blogbackend.services.EmailService;
 import org.thoughtlabs.blogbackend.services.PostService;
 import org.thoughtlabs.blogbackend.services.StorageService;
 import org.thoughtlabs.blogbackend.services.UserServiceImpl;
@@ -44,13 +52,37 @@ public class UserControllerTest {
     private UserServiceImpl userServiceImpl;
 
     @MockBean
+    private UserDetailsServiceImpl userDetailsServiceImpl;
+
+    @MockBean
+    private AuthEntryPointJwt unauthorizedHandler;
+
+    @MockBean
+    private EmailService emailService;
+
+    @MockBean
+    private OAuth2AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler;
+
+    @MockBean
+    private OAuth2AuthenticationFailureHandler oAuth2AuthenticationFailureHandler;
+
+    @MockBean
     private UserRepository userRepository;
+
+    @MockBean
+    private VerificationTokenRepository verificationTokenRepository;
+
+    @MockBean
+    private RoleRepository roleRepository;
 
     @MockBean
     private PostService postService;
 
     @MockBean
     private StorageService storageService;
+
+    @MockBean
+    private JwtUtils jwtUtils;
 
     @Autowired
     private ObjectMapper objectMapper;

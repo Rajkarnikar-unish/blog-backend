@@ -35,6 +35,7 @@ public class OAuth2Controller {
     @PostMapping("/oauth2-logout")
     public ResponseEntity<?> logoutOAuth2User(HttpServletRequest request, HttpServletResponse response) {
         CookieUtils.deleteCookie(request, response, "access_token");
+        CookieUtils.deleteCookie(request, response, "refresh_token");
         return ResponseEntity.ok().body("User logged out successfully");
     }
 }
