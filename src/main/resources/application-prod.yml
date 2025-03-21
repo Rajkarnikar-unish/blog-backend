@@ -84,8 +84,21 @@ application:
 cloudfront:
   url: https://d3cdw8ymz2nt7l.cloudfront.net
 
-unish:
-  app:
-    secret: ${appSecret}
+app:
+  auth:
+    tokenSecret: ${appSecret}
+    #ONE_WEEK
     jwtExpirationMs: 604_800_000
+    #TWO_WEEKS
     jwtRefreshExpirationMs: 1_209_600_000
+  cors:
+    allowedOrigins: http://localhost:3000, http://localhost:8080
+  oauth2:
+    authorizedRedirectUris:
+      - http://localhost:3000/
+
+email:
+  from: no-reply@thoughtlabs.com
+
+frontend:
+#  url:
