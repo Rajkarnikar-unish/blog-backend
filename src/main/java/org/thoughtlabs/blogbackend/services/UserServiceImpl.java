@@ -71,9 +71,13 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new UsernameNotFoundException("User with role " + roleName + " not found"));
     }
 
-//    public List<Post> getPostsByUserId(Long userId) {
-//        return postRepository.getPostsByUserId(userId).orElseGet(ArrayList::new);
-//    }
+    public List<Post> getPostsByUserId(Long userId) {
+        List<Post> posts = postRepository.getPostsByUserId(userId);
+        if(!posts.isEmpty()) {
+            return posts;
+        }
+        return new ArrayList<>();
+    }
 
     @Override
     public List<Post> getUsersPostByStatus(Long userId, EPostStatus status) {
