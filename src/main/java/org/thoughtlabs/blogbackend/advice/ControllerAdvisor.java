@@ -93,7 +93,7 @@ public class ControllerAdvisor extends ResponseEntityExceptionHandler {
     @ExceptionHandler(EmailNotFoundException.class)
     public ResponseEntity<ErrorMessage> handleEmailNotFoundException(EmailNotFoundException ex, WebRequest request) {
         ErrorMessage errorMessage = new ErrorMessage(
-                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.NOT_FOUND.value(),
                 LocalDateTime.now(),
                 ex.getMessage(),
                 request.getDescription(false)
