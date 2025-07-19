@@ -54,7 +54,8 @@ public class WebSecurityConfig implements WebMvcConfigurer {
             "/context-path/swagger-ui/**",
             "/context-path/swagger-resources",
             "/context-path/swagger-resources/**",
-            "/context-path/v3/api-docs/**"
+            "/context-path/v3/api-docs/**",
+            "/"
     };
 
     @Override
