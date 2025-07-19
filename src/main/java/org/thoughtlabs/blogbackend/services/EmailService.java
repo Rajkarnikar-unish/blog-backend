@@ -30,7 +30,7 @@ public class EmailService {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-            String verificationUrl = url + "/api/auth/verify?token=" + verificationToken.getToken();
+            String verificationUrl = url + "/verify-email?token=" + verificationToken.getToken();
 
             String emailVerificationContent = "<p>Dear " + verificationToken.getUser().getFirstName()  + ",</p>"
                     + "<p>Thank you for registering with <b>ThoughtLabs</b>! To complete your registration, please verify your email address by clicking the link below:</p>"
@@ -58,7 +58,7 @@ public class EmailService {
             MimeMessage message = javaMailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
-            String resetPasswordUrl = url + "/api/auth/reset-password?token=" + token;
+            String resetPasswordUrl = url + "/reset-password?token=" + token;
             String userFirstName = user.getFirstName().substring(0, 1).toUpperCase() + user.getFirstName().substring(1);
 
             String resetPasswordContent = "<p>Dear " + userFirstName + ",</p>"

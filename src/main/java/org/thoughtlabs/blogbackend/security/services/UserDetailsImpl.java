@@ -41,6 +41,9 @@ public class UserDetailsImpl extends User implements OAuth2User, UserDetails {
     private String profileImageUrl;
     @Getter
     @Setter
+    private Boolean isEmailVerified;
+    @Getter
+    @Setter
     private AuthProvider provider;
 
     private Collection<? extends GrantedAuthority> authorities;
@@ -48,13 +51,14 @@ public class UserDetailsImpl extends User implements OAuth2User, UserDetails {
     private Map<String, Object> attributes;
 
     //Constructor
-    public UserDetailsImpl(Long id, String username, String firstName, String lastName, String email, String password, String profileImageUrl, AuthProvider provider, Collection<? extends GrantedAuthority> authorities) {
+    public UserDetailsImpl(Long id, String username, String firstName, String lastName, String email, String password, Boolean isEmailVerified, String profileImageUrl, AuthProvider provider, Collection<? extends GrantedAuthority> authorities) {
         this.id = id;
         this.username = username;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.password = password;
+        this.isEmailVerified = isEmailVerified;
         this.profileImageUrl = profileImageUrl;
         this.provider = provider;
         this.authorities = authorities;
@@ -75,6 +79,7 @@ public class UserDetailsImpl extends User implements OAuth2User, UserDetails {
                 user.getLastName(),
                 user.getEmail(),
                 user.getPassword(),
+                user.isEmailVerified(),
                 user.getProfileImageUrl(),
                 user.getProvider(),
                 authorities);

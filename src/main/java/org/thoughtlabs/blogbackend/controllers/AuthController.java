@@ -124,7 +124,7 @@ public class AuthController {
     @PostMapping("/forgot-password")
     public ResponseEntity<?> forgotPassword(@RequestParam String email) {
         try {
-            userService.forgotPassword(email);
+             userService.forgotPassword(email);
             MessageResponse response = new MessageResponse(
                     HttpStatus.OK.value(),
                     "Please check your email for updating your password."
@@ -132,8 +132,8 @@ public class AuthController {
             return ResponseEntity.ok(response);
         } catch (EmailFailureException ex) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        } catch (EmailNotFoundException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        } catch (Exception ex) {
+            throw new EmailNotFoundException("Email address was not found!");
         }
     }
 
